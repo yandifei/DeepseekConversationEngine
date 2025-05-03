@@ -7,7 +7,7 @@ with open("README.md","r",encoding="utf-8") as readme_file:
 
 setup(
     name="DeepseekConversationEngine",               # 包名
-    version="1.0.0",                                 # 版本号
+    version="1.0.1",                                 # 版本号
     author="雁低飞",                                  # 作者
     author_email="3058439878@qq.com",                # 邮箱
     description="多人设、多场景、多论对话自动化管理",    # 简短描述
@@ -23,9 +23,7 @@ setup(
     ],
     python_requires=">=3.13.1",                      # 项目支持的Python版本
     install_requires=[
-        "os",
         "requests",
-        "json",
         "transformers>=4.51.3",
         "openai>=1.60.1"
     ],               # 项目必须的依赖
