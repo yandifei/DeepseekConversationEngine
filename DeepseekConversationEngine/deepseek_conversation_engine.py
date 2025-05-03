@@ -618,7 +618,7 @@ class DeepseekConversationEngine:
         """
         while True:
             txt_file_name += ".txt"  # 补足后缀名
-            path = os.path.join("./提示库/", txt_file_name)
+            path = os.path.join("提示库/", txt_file_name)
             if not os.path.isfile(path):  # 检查是否有这个文件（文件不存在）
                 print(
                     f"\033[91m\"{os.path.join(os.getcwd(), "提示库")}\"中没有“{txt_file_name}”这个文件，请检查该txt文件是否存在\033[0m")
@@ -634,7 +634,7 @@ class DeepseekConversationEngine:
         返回值： 修改成功返回True，否者返回False
         """
         role_name_txt = role_name + ".txt"  # 补足后缀名
-        path = os.path.join("./提示库/", role_name_txt)
+        path = os.path.join("提示库/", role_name_txt)
         if not os.path.isfile(path):  # 检查是否有这个文件（文件不存在）
             print("不存在该人设，不对人设进行任何任何修改")
             return False
@@ -656,7 +656,7 @@ class DeepseekConversationEngine:
         返回值：如果人设库为空则返回False,成功读入为True
         """
         all_role_list = list()  # 创建放置人设的列表
-        for role_txt in os.listdir("./提示库/"):  # 遍历该文件夹所有文件
+        for role_txt in os.listdir("提示库/"):  # 遍历该文件夹所有文件
             if role_txt.endswith(".txt"):  # 检索后缀名为.txt的文件
                 rol_name = role_txt.replace(".txt", "")  # 把文件名的.txt替换掉
                 all_role_list.append(rol_name)  # 存放人设
@@ -676,7 +676,7 @@ class DeepseekConversationEngine:
         返回值：如果打印成功返回True，否则返回False
         """
         role_name += ".txt"  # 补足后缀名
-        path = os.path.join("./提示库/", role_name)
+        path = os.path.join("提示库/", role_name)
         if not os.path.isfile(path):  # 检查是否有这个文件（文件不存在）
             print("不存在该人设，无法进行打印")
             return False

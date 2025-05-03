@@ -1,5 +1,6 @@
 # <center>DeepseekConversationEngine(DeepSeek对话引擎)</center>
-喜欢就给个Start吧，希望这个库能帮到你快速调用deepseek的api和进行二次开发
+喜欢就给个Start吧，希望这个库能帮到你快速调用deepseek的api和方便你进行二次开发
+项目源地址:https://github.com/yandifei/DeepseekConversationEngine
 ## 核心能力：
 - 密钥安全读取和校验
 - 多人设、多场景对话管理
@@ -11,6 +12,7 @@
 - 调用实例，快速上手
 
 ## 库简介
+通过`pip install DeepseekConversationEngine` 安装
 优先看官方的API文档或结合API文档看此说明。[DeepSeek API官方文档:](https://api-docs.deepseek.com/zh-cn/)https://api-docs.deepseek.com/zh-cn/
 **主要对应的是deepseek_conversation_engine.py这个文件中的DeepseekConversationEngine类**
 目标是最大化利用deepseek的api，面对不同场景使用不同的模型，给定不同的策略，通过指令快捷调用方法、动态调参。以提供对话策略为主但又添加api余额查询、token数精准计算的功能以及token字符转换计算(对能生产的字符和费用进行预估)。
