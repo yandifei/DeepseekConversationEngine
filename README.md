@@ -1,5 +1,5 @@
 # <center>DeepseekConversationEngine(DeepSeek对话引擎)</center>
-
+喜欢就给个Start吧，希望这个库能帮到你快速调用deepseek的api和进行二次开发
 ## 核心能力：
 - 密钥安全读取和校验
 - 多人设、多场景对话管理
