@@ -817,7 +817,7 @@ class DeepseekConversationEngine:
             self.fill_in_the_middle_ask()
         else:
             self.ask(text) # 进行提问
-        deepseek.dialog_history_manage()  # 自动管理之前的对话历史
+        self.dialog_history_manage()  # 自动管理之前的对话历史
 
     """余额计算和监控"""
     def balance_inquiry(self, out=False):
