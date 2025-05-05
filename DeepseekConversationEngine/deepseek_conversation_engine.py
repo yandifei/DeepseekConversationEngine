@@ -444,7 +444,6 @@ class DeepseekConversationEngine:
             if not self.stream: # 非流式输出记录
                 print(response.choices[0].message.content)
                 assistant_content = response.choices[0].message.content
-                self.dialog_history.append({"role": "assistant", "content": assistant_content}) # 把AI的回答添加到对话记录里面去
                 if self.model_choice == "deepseek-reasoner":     # R1模型会产生思维链（存在推理内容）
                     self.reasoning_content = response.choices[0].message.reasoning_content  # 把非流式的思维链接进行保存
             else:   #流式输出
@@ -460,7 +459,7 @@ class DeepseekConversationEngine:
                         print(f"{chunk.choices[0].delta.content or ""}", end="", flush=True)  # 实时逐词输出
                         assistant_content += chunk.choices[0].delta.content or "" # 累积最终回答
                 print() # 打印换行
-            self.dialog_history.append({"role": "assistant", "content": assistant_content}) # 添加AI的回答历史
+            self.dialog_history.append({"role": "assistant", "content": assistant_content}) # 添加AI的回答历史(包括流式和非流式)
             return assistant_content    # 返回AI回答的结果
         except OpenAIError as Error:
             # 获取 HTTP 状态码
