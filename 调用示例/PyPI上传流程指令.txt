@@ -1,0 +1,17 @@
+# 清理旧构建(没有或手动删除可以不用清理)
+rm -rf build dist *.egg-info
+
+# 生成新包（确保只有一个新包）
+python setup.py sdist bdist_wheel
+
+上传到PyPI测试环境（推荐首次使用）
+twine upload --repository testpypi dist/*
+
+正式环境
+twine upload dist/*
+
+# 从测试源安装
+pip install --index-url https://test.pypi.org/simple/ your-package-name
+
+# 正式安装
+pip install your-package-name

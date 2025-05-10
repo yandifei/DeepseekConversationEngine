@@ -5,14 +5,14 @@ with open("README.md","r",encoding="utf-8") as readme_file:
 
 setup(
     name="DeepseekConversationEngine",               # 包名(PyPI注册名)
-    version="1.1.0",                                 # 版本号
+    version="1.1.1",                                 # 版本号
     author="雁低飞",                                  # 作者
     author_email="3058439878@qq.com",                # 邮箱
     description="多人设、多场景、多论对话自动化管理",    # 简短描述
     long_description=long_description,               # 详细说明
     long_description_content_type="text/markdown",   # 详细说明使用标记类型
     url="https://github.com/yandifei/DeepseekConversationEngine", # 项目主页
-    packages=find_packages(),                        # 需要打包的部分，自动发现包目录
+    packages=find_packages(exclude=["调用示例"]),# 需要打包的部分，自动发现包目录(排除不需要打包的文件)
     # package_dir={"": "DeepseekConversationEngine"},  # 设置DeepseekConversationEngine目录为根目录
     package_data={
             "DeepseekConversationEngine": [
