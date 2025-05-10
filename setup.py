@@ -12,7 +12,8 @@ setup(
     long_description=long_description,               # 详细说明
     long_description_content_type="text/markdown",   # 详细说明使用标记类型
     url="https://github.com/yandifei/DeepseekConversationEngine", # 项目主页
-    packages=find_packages(exclude=["调用示例"]),# 需要打包的部分，自动发现包目录(排除不需要打包的文件)
+    # 需要打包的部分，自动发现包目录(排除不需要打包的文件)
+    packages=find_packages(exclude=[".idea", ".git", "调用示例", "DeepseekConversationEngine(deepseek对话引擎).md"]),
     # package_dir={"": "DeepseekConversationEngine"},  # 设置DeepseekConversationEngine目录为根目录
     package_data={
             "DeepseekConversationEngine": [
