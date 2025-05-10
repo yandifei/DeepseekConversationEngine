@@ -6,15 +6,16 @@ import os
 import re
 import io
 from datetime import datetime
-from tkinter import Tk  # 用来获取剪切板的内容的
+from time import sleep
+# from tkinter import Tk  # 用来获取剪切板的内容的
 # 第三方库
 import uiautomation
 import win32api
 import win32gui
 import win32con
 import win32clipboard
-from PIL import Image
-from time import sleep
+from PIL import Image   # pip install Pillow
+
 
 class QQMessageMonitor:
     def __init__(self,win_name="",monitor_name="",top_wait_time = 2):
@@ -137,8 +138,8 @@ class QQMessageMonitor:
         self.create_directory()  # 如果没有转义这里会报警告，不用管(创建目录)
         self.create_txt()  # 创建文本文件
         self.message_processing_queues = list() # 消息处理队列(接收到指定消息后就把消息进行处理)
-        self.tkinter = Tk() # 创建Tkinter 窗口
-        self.tkinter.withdraw()  # 隐藏主窗口
+        # self.tkinter = Tk() # 创建Tkinter 窗口
+        # self.tkinter.withdraw()  # 隐藏主窗口
 
     def parameter_validation(self):
         """创建对象时对输入的信息进行校验"""

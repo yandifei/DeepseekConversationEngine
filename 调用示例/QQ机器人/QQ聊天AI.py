@@ -5,19 +5,21 @@ import types
 from QQMessageMonitor import * # 导包
 from deepseek_conversation_engine import DeepseekConversationEngine
 """--------------------------------------------------需要修改的参数----------------------------------------------------"""
-# qq_group_name = input("请输入监听的群聊:\n") # 猫猫       雁低飞
-# qq_monitor_name = input("请输入你的身份(最好是聊天对象的名称，如你在q群的名称):\n")
-qq_group_name = "Free my WW"
-qq_monitor_name = "雁低飞"
-administrator = ["雁低飞","yandifei"]  # 设置超级管理员
-role = "专属猫娘"   # (设置人设为专属猫娘)编程教师
+qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")
+qq_monitor_name = input("请输入你的身份(你在q群的名称):")
+qq_administrator = input("请输入管理员名称(自己是超管，不输入则不设置):")
+role = input("请输入自动回复的人设(专属猫娘、变态猫娘、怼人模式、编程教师、翻译模式、魅魔模式):")
+# qq_group_name = "Free my WW"
+# qq_monitor_name = "雁低飞"
+administrator = [qq_monitor_name]  # 设置超级管理员("雁低飞","yandifei")
+administrator.append(qq_administrator) if qq_administrator != "" else print("未设置管理员")
+# role = "专属猫娘"   # (设置人设为专属猫娘)编程教师
 """----------------------------------------------------实例化对象------------------------------------------------------"""
 chat_win1 = QQMessageMonitor(qq_group_name, qq_monitor_name)    # 会自动置顶和自动展示(最小化显示)
 deepseek = DeepseekConversationEngine(role)  # 实例化对象
 """--------------------------------------------------QQ窗口绑定处理----------------------------------------------------"""
 chat_win1.show_win()    # 展示窗口
 chat_win1.top_win()     # 置顶窗口
-# chat_win1.cancel_top_win()  # 取消置顶
 chat_win1.move()        # 把窗口移动到最上角 0,1010
 print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
 print(f"数据存放路径:\t{chat_win1.message_data_txt}")
@@ -89,6 +91,7 @@ def qq_quick_order(order: str):
     参数： order ： 收到的消息(#R1模型)
     返回值：如果指令存在则执行对应的函数后返回True，如果指令不存在返回False
     """
+    global args #使用外面的全局变量
     def execute_function(true_false_result):
         """是否执行返回值的函数
         参数 : true_false_result  ；执行结果
@@ -118,7 +121,7 @@ def qq_quick_order(order: str):
         return False  # 没有这个指令
     else:
         if function_check(function_map[order][0]) and args is None:   # 是一个无参函数
-            print("\033[92m无参函数执行了\033[0m")
+            # print("\033[92m无参函数执行了\033[0m")
             try:    # 假设没有:却必须要填入参数没有填
                 result = function_map[order][0]()    # 执行函数并拿到返回结果
                 execute_function(result)
@@ -128,11 +131,11 @@ def qq_quick_order(order: str):
                 else:
                     chat_win1.send_message("请在指令中附带必要参数:\n" + function_map[order][2])  # 直接发送假值
         elif function_check(function_map[order][0]) and args is not None:    # 是有参函数
-            print("\033[92m有参函数执行了\033[0m")
+            # print("\033[92m有参函数执行了\033[0m")
             result = function_map[order][0](args)  # 传入参数并执行函数并拿到返回结果
             execute_function(result)
         else:   # 不是一个函数(可能是None、True、False)
-            print("\033[92m不是函数执行了\033[0m")
+            # print("\033[92m不是函数执行了\033[0m")
             result = function_map[order][0]     # 传入的不是一个函数不执行，仅仅拿到值
             execute_function(result)
     return True  # 存在指令且执行即返回True
@@ -150,7 +153,7 @@ def exit_qq_auto_reply(administrator_name):
         chat_win1.send_message("此为高级操作，你无权执行该指令")
 """-------------------------------------------------QQ消息回复处理-----------------------------------------------------"""
 while True:
-    sleep(0.5)  # 每0.5秒监测一次变化
+    sleep(1)  # 每1秒监测一次变化
     chat_win1.show_win()    # 展示窗口
     chat_win1.top_win()     # 置顶开窗口
     chat_win1.monitor_message() # 始监控
