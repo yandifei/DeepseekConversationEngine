@@ -217,7 +217,7 @@ class QQMessageMonitor:
             # sleep(1)
             print(obj.GetChildren()[0].LocalizedControlType)
             print(obj.GetChildren()[1].LocalizedControlType)
-            raise EnvironmentError(f"请把“{self.win_name}”窗口显示在桌面上")
+            raise EnvironmentError(f"请把“{self.win_name}”窗口置顶显示在桌面上或重新启动程序")
         # 文档->组->第二个组->第二个组->群聊3个|好友2个组
         elif len(obj.GetChildren()[0].GetChildren()[0].GetChildren()[1].GetChildren()[1].GetChildren()) == 3:
             self.group_or_friend = "群聊"
@@ -225,6 +225,7 @@ class QQMessageMonitor:
         elif len(obj.GetChildren()[0].GetChildren()[0].GetChildren()[1].GetChildren()[1].GetChildren()) == 2:
             self.group_or_friend = "好友"
             return "好友"
+        return False    # 窗口没有显示在桌面上
 
     """窗口控制和控件操作相关"""
     def move(self,x = None, y = None,repaint=True):

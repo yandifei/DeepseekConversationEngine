@@ -1,0 +1,3 @@
+pyinstaller --splash QQ_chat_AI_256.png -i QQ_chat_AI_256 -D QQ聊天AI.py
+
+打包后需要的exe在dist文件家里面s
