@@ -4,7 +4,6 @@ try:
     pyi_splash.close()
 except ImportError:
     pass
-
 """---------------------------------------------------导包和导库-----------------------------------------------------"""
 # 内置库
 import sys
@@ -14,23 +13,33 @@ import types
 from QQMessageMonitor import * # 导包
 from deepseek_conversation_engine import DeepseekConversationEngine
 uiautomation.SetClipboardText("") # 设置剪切板内容为空避免出现问题(第一次粘贴可能导致大量的文本出现)
+all_role_name = "、".join([filename.replace(".txt", "") for filename in os.listdir("提示库/") if filename.endswith(".txt")])     #遍历有效文件
 """--------------------------------------------------需要修改的参数----------------------------------------------------"""
 qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")
-qq_monitor_name = input("请输入你的身份(你在q群的名称):")
+qq_monitor_name = input("请输入你的身份(你在QQ群的名称):")
 qq_administrator = input("请输入管理员名称(自己是超管，不输入则不设置):")
-role = input("请输入自动回复的人设(在提示库里面，不需要输入后缀名):")
-# qq_group_name = "Free my WW"
+role = input(f"请输入自动回复的人设(提示库人设:{all_role_name}):")
+win_xy = input("请输入QQ窗口窗口的位置(可以不填，默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
+win_xy = win_xy.replace("，",",") # 转换，字符
+if not win_xy:  # 输入为空
+    win_x = win_y = None
+else:
+    win_x, win_y = win_xy.split(",")
+    win_x, win_y = int(win_x), int(win_y)
+# qq_group_name = "1"
 # qq_monitor_name = "雁低飞"
+# qq_administrator = "雁低飞"
+# role = "变态猫娘"
+# win_x, win_y = 1919,-579
 administrator = [qq_monitor_name]  # 设置超级管理员("雁低飞","yandifei")
 administrator.append(qq_administrator) if qq_administrator != "" else print("未设置管理员")
-# role = "专属猫娘"   # (设置人设为专属猫娘)编程教师
 """----------------------------------------------------实例化对象------------------------------------------------------"""
 chat_win1 = QQMessageMonitor(qq_group_name, qq_monitor_name)    # 会自动置顶和自动展示(最小化显示)
 deepseek = DeepseekConversationEngine(role)  # 实例化对象
 """--------------------------------------------------QQ窗口绑定处理----------------------------------------------------"""
 chat_win1.show_win()    # 展示窗口
 chat_win1.top_win()     # 置顶窗口
-chat_win1.move()        # 把窗口移动到最上角 0,1010
+chat_win1.move(win_x, win_y)        # 把窗口移动到最上角 0,1010
 print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
 print(f"数据存放路径:\t{chat_win1.message_data_txt}")
 for one_message in chat_win1.message_list:  # 打印初次绑定后的消息
@@ -162,38 +171,38 @@ def exit_qq_auto_reply(administrator_name):
         print("\033[31m此为高级操作，你无权执行该指令\033[0m")
         chat_win1.send_message("此为高级操作，你无权执行该指令")
 """-------------------------------------------------QQ消息回复处理-----------------------------------------------------"""
-try:
-    while True:
-        sleep(1)  # 每1秒监测一次变化
-        chat_win1.show_win()    # 展示窗口
-        chat_win1.top_win()     # 置顶开窗口
-        chat_win1.monitor_message() # 始监控
-        """消息处理"""
-        if len(chat_win1.message_processing_queues) > 0:    # 队列不为空，进行队列处理
-            # 这里是发送者的名字，我接收它的名字
-            sender = chat_win1.message_processing_queues[0]["发送者"]
-            # 我接受的消息（这里的发送消息指的是对方的发送消息)
-            accept_message = chat_win1.message_processing_queues[0]["发送消息"]
-            accept_message = accept_message.replace(f"@{chat_win1.monitor_name} ", "")   # 去除（@自己的名字 ）这个部分
-            if accept_message == "": accept_message = " "    # 确保消息体不为空
-            # 对方的消息发送时间
-            accept_time = chat_win1.message_processing_queues[0]["发送时间"]
-            """===============快捷指令处理==========="""
-            if "#" == accept_message[0]:   # 检测到指令的消息
-                if "#退出" in accept_message:      # 消息中存在退出指令
-                    exit_qq_auto_reply(sender)     # 检查发送者的身份是否为管理员(内置优雅退出)
-                else: qq_quick_order(accept_message)    # 把指令带进入分析
-                chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
-                print(f"\033[94m已完成“{sender}”的指令\033[0m")
-            else:       # 非退出指令操作
-                # deepseek.conversation_engine(content)  # 调用对话引擎
-                reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
-                print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)
-                chat_win1.send_message(f"@{sender} "+ reply)                       # 把回应发送到qq
-                deepseek.dialog_history_manage()    # 自动删除久远的对话历史
-                chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
-                print(f"\033[94m已完成“{sender}”的消息处理\033[0m")
-except Exception as e:
-    print(f"捕获到异常: {e}")
-    # input("按Enter键退出...")  # 防止窗口立即关闭
+# try:
+while True:
+    sleep(1)  # 每1秒监测一次变化
+    chat_win1.show_win()    # 展示窗口
+    chat_win1.top_win()     # 置顶开窗口
+    chat_win1.monitor_message() # 始监控
+    """消息处理"""
+    if len(chat_win1.message_processing_queues) > 0:    # 队列不为空，进行队列处理
+        # 这里是发送者的名字，我接收它的名字
+        sender = chat_win1.message_processing_queues[0]["发送者"]
+        # 我接受的消息（这里的发送消息指的是对方的发送消息)
+        accept_message = chat_win1.message_processing_queues[0]["发送消息"]
+        accept_message = accept_message.replace(f"@{chat_win1.monitor_name} ", "")   # 去除（@自己的名字 ）这个部分
+        if accept_message == "": accept_message = " "    # 确保消息体不为空
+        # 对方的消息发送时间
+        accept_time = chat_win1.message_processing_queues[0]["发送时间"]
+        """===============快捷指令处理==========="""
+        if "#" == accept_message[0]:   # 检测到指令的消息
+            if "#退出" in accept_message:      # 消息中存在退出指令
+                exit_qq_auto_reply(sender)     # 检查发送者的身份是否为管理员(内置优雅退出)
+            else: qq_quick_order(accept_message)    # 把指令带进入分析
+            chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
+            print(f"\033[94m已完成“{sender}”的指令\033[0m")
+        else:       # 非退出指令操作
+            # deepseek.conversation_engine(content)  # 调用对话引擎
+            reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
+            print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)
+            chat_win1.send_message(f"@{sender} "+ reply)                       # 把回应发送到qq
+            deepseek.dialog_history_manage()    # 自动删除久远的对话历史
+            chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
+            print(f"\033[94m已完成“{sender}”的消息处理\033[0m")
+# except Exception as e:
+#     print(f"捕获到异常: {e}")
+#     # input("按Enter键退出...")  # 防止窗口立即关闭
 # : 'comtypes==1.4.10', 'mkl-service==2.4.0', 'pywin32==310', 'setuptools==72.1.0', 'uiautomation==2.0.28', 'wheel==0.45.1'

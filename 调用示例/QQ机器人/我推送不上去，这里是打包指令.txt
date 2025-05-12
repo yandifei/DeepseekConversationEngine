@@ -1,4 +1,0 @@
-pyinstaller -i QQ_chat_AI.ico --splash QQ_chat_AI.png --uac-admin -D QQ聊天AI.py
-
-修改图标 + 启动图标 + 管理员 + 打包的主程序
-打包后需要的exe在dist文件家里面s
