@@ -7,7 +7,7 @@ import re
 import io
 from datetime import datetime
 from time import sleep
-# from tkinter import Tk  # 用来获取剪切板的内容的
+from tkinter import Tk  # 用来获取剪切板的内容的
 # 第三方库
 import uiautomation
 import win32api
@@ -15,7 +15,6 @@ import win32gui
 import win32con
 import win32clipboard
 from PIL import Image   # pip install Pillow
-
 
 class QQMessageMonitor:
     def __init__(self,win_name="",monitor_name="",top_wait_time = 2):
@@ -138,8 +137,14 @@ class QQMessageMonitor:
         self.create_directory()  # 如果没有转义这里会报警告，不用管(创建目录)
         self.create_txt()  # 创建文本文件
         self.message_processing_queues = list() # 消息处理队列(接收到指定消息后就把消息进行处理)
-        # self.tkinter = Tk() # 创建Tkinter 窗口
-        # self.tkinter.withdraw()  # 隐藏主窗口
+        self.tkinter = Tk() # 创建Tkinter 窗口
+        self.tkinter.withdraw()  # 隐藏主窗口
+        self.keyword_respond = False    # 是否启动关键词自动回复
+        self.message_keyword = list()   # 消息关键词
+        self.sender_keyword = list()   # 发送者关键词.txt
+        self.sender_keyword_map = dict()    # 指定发送者的关键词
+
+
 
     def parameter_validation(self):
         """创建对象时对输入的信息进行校验"""
@@ -181,7 +186,7 @@ class QQMessageMonitor:
         """
         qq_chat_win_list = list() # 如果标题和类名相同就拒绝绑定
         for visible_window in visible_windows_object:
-            # 找到符合指定好友名或qq群名的窗口 
+            # 找到符合指定好友名或qq群名的窗口
             if visible_window.Name == self.win_name and visible_window.ClassName == "Chrome_WidgetWin_1":
                 qq_chat_win_list.append(visible_window) # 把查找对象添加进去
         if len(qq_chat_win_list) == 0:
@@ -396,12 +401,23 @@ class QQMessageMonitor:
         """通过复制粘贴文本到qq发送控件
         参数：text ： 发送的文本
         """
-        # 临时使用剪切板，但是又被影响之前的调用
-        # temp = self.tkinter.clipboard_get()     # 获得剪切板的内容
-        uiautomation.SetClipboardText(text) # 设置剪切板内容
-        self.edit_box.SetFocus()    # 设置焦点
-        self.edit_box.SendKeys("{ctrl}v")
-        # uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
+        try:
+            # 临时使用剪切板，但是又被影响之前的调用
+            temp = self.tkinter.clipboard_get()     # 获得剪切板的内容
+            uiautomation.SetClipboardText(text) # 设置剪切板内容
+            self.edit_box.SetFocus()    # 设置焦点
+            self.edit_box.SendKeys("{ctrl}v")
+            uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
+        except Exception as e:
+            uiautomation.SetClipboardText(f"出现异常错误:{e},410代码处发生异常，强制推送启动")  # 设置剪切板内容
+            self.edit_box.SetFocus()  # 设置焦点
+            self.edit_box.SendKeys("{ctrl}v")
+            # 捕获异常后重新发送
+            temp = self.tkinter.clipboard_get()  # 获得剪切板的内容
+            uiautomation.SetClipboardText(text)  # 设置剪切板内容
+            self.edit_box.SetFocus()  # 设置焦点
+            self.edit_box.SendKeys("{ctrl}v")
+            uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
         """后台点击发送按钮"""
         # 获取发送按钮中心x和y的绝对坐标
         screen_x, screen_y = self.send_button.BoundingRectangle.xcenter(), self.send_button.BoundingRectangle.ycenter()
@@ -538,6 +554,7 @@ class QQMessageMonitor:
                 else:
                     for children_control in obj.GetChildren():
                         txt_split(children_control)
+                return True
             except AttributeError as ex:
                 print(f"文本消息解析失败，{ex}")
                 return "获取失败"
@@ -627,7 +644,7 @@ class QQMessageMonitor:
                 # print(index)
                 new_message_list.append(self.message_list[index])
                 message_dict = self.message_list_dict[index]   # 我还是增强可读性和减少引用吧
-                self.hook_message(message_dict)
+                self.hook_message(message_dict)         # 截获关键消息(关键词回复)
             self.message_list = new_message_list # 把新消息的列表给消息列表属性(之前的空间都被垃圾回收机制回收掉)
             for one_message in self.message_list:   #输出监听到的消息
                 print(one_message)
@@ -643,11 +660,31 @@ class QQMessageMonitor:
         """
         if len(self.message_processing_queues) > max_processing_queues: # 超出最大处理数
             print(f"\033[91m超出消息最大处理数:{max_processing_queues}，不对消息进行处理\033[0m")  # 亮红色
+            message_dict["发送者"], message_dict["发送消息"] = "系统", f"超出消息最大处理数:{max_processing_queues}，不对消息进行处理"
+            self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+        # 截获自己被@的情况做出消息处理
         elif f"@{self.monitor_name}" in message_dict["发送消息"]:  # 最新列表获取消息
             if self.monitor_name == message_dict["发送者"]:        # 自己@自己
                 message_dict["发送者"] = "自己"  # 给自己改名
             print(f"\033[94m我被{message_dict["发送者"]}艾特了，消息是:{message_dict["发送消息"]}\033[0m")
             self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+        # 检查是否开启了关键词自动回复,仅当开启了才会
+        if not self.keyword_respond:
+            return False   # 没有开启关键词自动回复直接退出
+        # 截获指定的消息（关键词）进行处理
+        elif message_dict["发送消息"] in self.message_keyword:   # 消息关键词列表
+            print(f"\033[94m截获关键词:{message_dict["发送消息"]}，发送者是:{message_dict["发送者"]}\033[0m")
+            self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+        # 截获指定的发送者进行处理
+        elif message_dict["发送者"] in self.sender_keyword:
+            print(f"\033[94m截获关键发送者:{message_dict["发送者"]}，发送消息是:{message_dict["发送消息"]}\033[0m")
+            self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+        # 截获指定发送者存在关键词的消息进行处理(发送者全名在字典你面，发送者的关键词在消息体里面)
+        elif message_dict["发送者"] in self.sender_keyword_map and self.sender_keyword_map[message_dict["发送者"]] in message_dict["发送消息"]:
+            print(f"\033[94m截获发送者:{message_dict["发送者"]}，消息是:{message_dict["发送消息"]}\033[0m")
+            self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+        return True
+
 
 if __name__ == '__main__':
     # chat1 = QQMessageMonitor("Q群号", "Q群中你的名字")
