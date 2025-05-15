@@ -17,7 +17,7 @@ all_role_name = "、".join([filename.replace(".txt", "") for filename in os.list
 """--------------------------------------------------需要修改的参数----------------------------------------------------"""
 qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")   # 鸣潮自动刷声骸 怼人模式
 qq_monitor_name = input("请输入你的身份(你在QQ群的名称):")
-qq_administrator = input("请输入管理员名称(自己是超管，不输入则不设置):")
+qq_administrator = input("请输入超级管理员名称(机器人默认超管，不输入则不设置):")
 role = input(f"请输入自动回复的人设(提示库人设:{all_role_name}):")
 win_xy = input("请输入QQ窗口窗口的位置(可以不填，默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
 win_xy = win_xy.replace("，",",") # 转换，字符
@@ -26,11 +26,6 @@ if not win_xy:  # 输入为空
 else:
     win_x, win_y = win_xy.split(",")
     win_x, win_y = int(win_x), int(win_y)
-# qq_group_name = "1"
-# qq_monitor_name = "雁低飞"
-# qq_administrator = "雁低飞"
-# role = "变态猫娘"
-# win_x, win_y = 1919,-579
 administrator = [qq_monitor_name]  # 设置超级管理员("雁低飞","yandifei")
 administrator.append(qq_administrator) if qq_administrator != "" else print("未设置管理员")
 """----------------------------------------------------实例化对象------------------------------------------------------"""
@@ -44,11 +39,18 @@ print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
 print(f"数据存放路径:\t{chat_win1.message_data_txt}")
 for one_message in chat_win1.message_list:  # 打印初次绑定后的消息
     print(one_message)
+# 鸣潮、猫、猫猫、可爱、萝莉、白丝、AI、机器人、加入了群聊
+# {
+#   "系统": ["你", "加入了群聊"]
+# }
 """------------------------------------------------------快捷指令------------------------------------------------------"""
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
 args = None
 # 函数映射表(使用lambda来匿名函数)，直接把指点放到环境变量外，防止每次加载的时候都是
 function_map = {
+    # QQ管理这类的专属指令
+    "#开启关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",True),"开启关键词自动回复","开启关键词自动回复"], # 这个返回None
+    "#关闭关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",False),"关闭关键词自动回复","关闭关键词自动回复"], # 这个返回None
     # 特殊指令
     "#兼容": [lambda : deepseek.compatible_openai(),"已经切换至兼容OpenAI的接口","切换中途发生异常"],
     "#测试接口": [lambda : deepseek.use_beat(),"已切换至测试接口","切换中途发生异常"],
@@ -105,12 +107,13 @@ function_map = {
     "#余额": [True, lambda : deepseek.return_balance(), "无法查询"],
     "#token": [True, lambda : deepseek.return_token(), lambda : deepseek.return_balance(), "无法查询"]
 }
-def qq_quick_order(order: str):
-    """qq快捷指令（调用此方法后自动分割后通过关键字快速找到其他方法）
-    参数： order ： 收到的消息(#R1模型)
+def quick_order(order: str):
+    """快捷指令（调用此方法后自动分割后通过关键字快速找到其他方法）
+    参数： order ： 收到的消息(#R1 模型)
     返回值：如果指令存在则执行对应的函数后返回True，如果指令不存在返回False
     """
     global args #使用外面的全局变量
+    args = None     # 清空上一次指令的参数
     def execute_function(true_false_result):
         """是否执行返回值的函数
         参数 : true_false_result  ；执行结果
@@ -173,7 +176,7 @@ def exit_qq_auto_reply(administrator_name):
 """-------------------------------------------------QQ消息回复处理-----------------------------------------------------"""
 # try:
 while True:
-    sleep(1)  # 每1秒监测一次变化
+    sleep(0.1)  # 每1秒监测一次变化
     chat_win1.show_win()    # 展示窗口
     chat_win1.top_win()     # 置顶开窗口
     chat_win1.monitor_message() # 始监控
@@ -191,14 +194,17 @@ while True:
         if "#" == accept_message[0]:   # 检测到指令的消息
             if "#退出" in accept_message:      # 消息中存在退出指令
                 exit_qq_auto_reply(sender)     # 检查发送者的身份是否为管理员(内置优雅退出)
-            else: qq_quick_order(accept_message)    # 把指令带进入分析
+            else: quick_order(accept_message)    # 把指令带进入分析
             chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
             print(f"\033[94m已完成“{sender}”的指令\033[0m")
-        else:       # 非退出指令操作
+        else:       # 非退出指令操作`
             # deepseek.conversation_engine(content)  # 调用对话引擎
             reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
             print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)
-            chat_win1.send_message(f"@{sender} "+ reply)                       # 把回应发送到qq
+            if sender == "系统":      # 如果是系统发送就不@了
+                chat_win1.send_message(reply)  # 直接把回应发送到qq
+            else:
+                chat_win1.send_message(f"@{sender} " + reply)   # @人并把回应发送到qq
             deepseek.dialog_history_manage()    # 自动删除久远的对话历史
             chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
             print(f"\033[94m已完成“{sender}”的消息处理\033[0m")

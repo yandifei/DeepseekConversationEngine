@@ -127,11 +127,13 @@ class QQMessageMonitor:
             # 2个组里面->组3->组1->组1->组2(直接文本控件(群聊成员人数))
             self.group_member_count = self.main_chat_win.GetChildren()[1].GetChildren()[2].GetChildren()[0].GetChildren()[group_or_friend_index]    # 群聊成员人数
             # 2个组里面->组3->组1->组1->组3(群搜索按钮)
-            # 2个组里面->组3->组1->组1->组4->组->组2(群成员搜索输入框("编辑"EditControl))
             self.group_member_search = self.main_chat_win.GetChildren()[1].GetChildren()[2].GetChildren()[0].GetChildren()[group_or_friend_index + 1]
+            # 2个组里面->组3->组1->组1->组4->组->组2(群成员搜索输入框("编辑"EditControl))
             self.group_member_search_input_box= self.main_chat_win.GetChildren()[1].GetChildren()[2].GetChildren()[0].GetChildren()[group_or_friend_index + 2].GetChildren()[0].GetChildren()[1]    # 群聊成员人数
             # 2个组里面->组3->组1->组1->组5->"成员列表"(一堆子组(记录群员和职称，如果是群友就没有称呼))
             self.group_member_list = self.main_chat_win.GetChildren()[1].GetChildren()[2].GetChildren()[0].GetChildren()[group_or_friend_index + 3].GetChildren()[0]
+            # QQ群主和管理员
+            self.qq_group_administrator = self.get_qq_group_administrator()
         """-----------------------------------------消息监听相关-----------------------------------------"""
         self.message_data_directory = None   # 监听数据存放的目录
         self.message_data_txt = None    # 监听的文本数据存放路径
@@ -243,8 +245,8 @@ class QQMessageMonitor:
         repaint : 重新绘制窗口，默认打开
         """
         if x == y is None:  # 把窗口移动到指定位置
-            x = 3 - self.height()
-            y = 3 - self.weight()
+            x = 3 - self.weight()
+            y = 3 - self.height()
         size = win32gui.GetWindowRect(self.qq_chat_hwnd)  # 获取窗口左上角和右下角的坐标
         width, height = size[2] - size[0], size[3] - size[1]    # 计算窗口的大小
         win32gui.MoveWindow(self.qq_chat_hwnd, x, y, width, height, repaint)
@@ -412,9 +414,7 @@ class QQMessageMonitor:
             self.edit_box.SendKeys("{ctrl}v")
             uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
         except Exception as e:
-            uiautomation.SetClipboardText(f"出现异常错误:{e},410代码处发生异常，强制推送启动")  # 设置剪切板内容
-            self.edit_box.SetFocus()  # 设置焦点
-            self.edit_box.SendKeys("{ctrl}v")
+            print(f"\033[91m出现异常错误:{e},粘贴处发生异常，强制推送启动\033[91m")  # 设置剪切板内容出现异常
             # 捕获异常后重新发送
             temp = self.tkinter.clipboard_get()  # 获得剪切板的内容
             uiautomation.SetClipboardText(text)  # 设置剪切板内容
@@ -469,6 +469,18 @@ class QQMessageMonitor:
                 elif i.LocalizedControlType == "文本":    # 没有子控件
                     bulletin_message += i.Name + " " # 添加文本
         return bulletin_message
+
+    def get_qq_group_administrator(self):
+        """解析Q群的管理员和群主(方法这么命名是因为群主最大同时也有管理员的权限)
+        返回值： qq_group_administrator_list ： QQ管理员列表(第一个元素为群主)
+        """
+        # [administrator for administrator in self.group_member_list if self.group_member_list.GetChildren()[2].GetChildren()[0].Name == "管理员"]
+        qq_group_administrator_list = list()    # 群成员列表
+        qq_group_administrator_list.append(self.group_member_list.GetChildren()[0].GetChildren()[1].Name)    # 收录群主的名字
+        for administrator in self.group_member_list.GetChildren()[1:]:    # 遍历成员列表(跳过群组遍历)
+            if len(administrator.GetChildren()) == 3:    # 检测身份(不是管理员或群主没有3个控件，这个控件记录身份)
+                qq_group_administrator_list.append(administrator.GetChildren()[1].Name)     # 添加管理员身份
+        return qq_group_administrator_list
 
     def create_directory(self,path=None,use=False):
         """创建监听者和监听窗口的目录
@@ -693,11 +705,10 @@ class QQMessageMonitor:
         if self.sender_keyword:         # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
             # 发送者关键词的处理
             self.sender_keyword = re.compile(r'|'.join(map(re.escape, self.sender_keyword)))  # 安全转为正则表达式
-        print(f"关键发送者及其关键词:{self.message_sender_keyword}")
-        print(f"关键词:{self.message_keyword}")
-        print(f"关键发送者:{self.sender_keyword}")
+        # print(f"关键发送者及其关键词:{self.message_sender_keyword}")
+        # print(f"关键词:{self.message_keyword}")
+        # print(f"关键发送者:{self.sender_keyword}")
         return True
-
 
     def message_keyword_jude(self, text):
         """消息关键词判断(拿到正则表达式对象)

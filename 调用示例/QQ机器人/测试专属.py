@@ -19,7 +19,7 @@ qq_group_name = "1"  # Noki 哈士嗷 鸣潮工具发布1群
 qq_monitor_name = "猫猫"
 qq_administrator = "雁低飞"
 role = "可爱猫猫"
-win_x, win_y = -579,2    # [-579,2、-579,582、1919,-579、1919,2、1919,582]):"
+win_x, win_y = None,None   # [-579,2、-579,582、1919,-579、1919,2、1919,582]):"
 administrator = [qq_monitor_name]  # 设置超级管理员("雁低飞","yandifei")
 administrator.append(qq_administrator) if qq_administrator != "" else print("未设置管理员")
 """----------------------------------------------------实例化对象------------------------------------------------------"""
@@ -33,16 +33,13 @@ print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
 print(f"数据存放路径:\t{chat_win1.message_data_txt}")
 for one_message in chat_win1.message_list:  # 打印初次绑定后的消息
     print(one_message)
-# 鸣潮、猫、猫猫、可爱、萝莉、白丝、AI、机器人、加入了群聊
-# {
-#   "系统": ["你", "加入了群聊"]
-# }
 """------------------------------------------------------快捷指令------------------------------------------------------"""
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
 args = None
 # 函数映射表(使用lambda来匿名函数)，直接把指点放到环境变量外，防止每次加载的时候都是
 function_map = {
     # QQ管理这类的专属指令
+    "#所有管理员": [True, lambda : "\n".join([qq_administrator_name for qq_administrator_name in chat_win1.get_qq_group_administrator()]),"无法查询"],
     "#开启关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",True),"开启关键词自动回复","开启关键词自动回复"], # 这个返回None
     "#关闭关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",False),"关闭关键词自动回复","关闭关键词自动回复"], # 这个返回None
     # 特殊指令
