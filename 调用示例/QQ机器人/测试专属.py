@@ -8,7 +8,6 @@ except ImportError:
 # 内置库
 import sys
 import types
-import json
 # 第三方库
 # 自己的库
 from QQMessageMonitor import * # 导包
@@ -34,45 +33,10 @@ print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
 print(f"数据存放路径:\t{chat_win1.message_data_txt}")
 for one_message in chat_win1.message_list:  # 打印初次绑定后的消息
     print(one_message)
-"""关键词录入"""
-# 发送者及其关键词内容读入
-try:
-    with open("./关键词回复/发送者及其关键词.json", "r", encoding="utf-8") as json_file:
-        sender_keyword_map = json.load(json_file)   # 监测指定的人和关键字
-except json.JSONDecodeError as e:
-    print(f"json文件的格式错误: {e}")
-# 消息关键词内容读入(去除首尾空白判断是否分割内容)
-with open("./关键词回复/消息关键词.txt", "r", encoding="utf-8") as message_keyword_file:
-    if content := message_keyword_file.read().strip():  # 使用海象运算符简化代码
-        message_keyword = content.split("、")
-    else:
-        message_keyword = []  # 文件为空时返回干净的空列表
-# 发送者关键词内容读入(去除首尾空白判断是否分割内容)
-with open("./关键词回复/发送者关键词.txt", "r", encoding="utf-8") as sender_keyword_file:
-    if content := sender_keyword_file.read().strip():  # 使用海象运算符简化代码
-        sender_keyword = content.split("、")
-    else:
-        sender_keyword = []  # 文件为空时返回干净的空列表
-
-# 先判断人是否在字典里面再判断关键字是否再里面
-if send_name in sender_keyword_map:
-    sender_keyword_map = sender_keyword_map[send_name]   # 把这个发送者的所有字符转为正则
-    sender_keyword_map = re.compile(r'|'.join(map(re.escape, sender_keyword_map)))  # 安全转为正则表达式
-
-message_keyword = re.compile(r'|'.join(map(re.escape, message_keyword)))    # 安全转为正则表达式
-sender_keyword = re.compile(r'|'.join(map(re.escape, sender_keyword)))      # 安全转为正则表达式
-
-print(sender_keyword_map)
-print(message_keyword)
-print(sender_keyword)
-
-# sender_keyword.findall(text)    #  传入需要判定的文本
-
-# if any([message_keyword, sender_keyword, sender_keyword_map]):
-#     chat_win1.message_keyword = message_keyword  # 存储消息关键词
-#     chat_win1.sender_keyword = sender_keyword  # 存储发送者关键词
-#     chat_win1.sender_keyword_map = sender_keyword_map   # 存储关键词
-#     chat_win1.keyword_respond = True   # 开启关键词自动回复
+# 鸣潮、猫、猫猫、可爱、萝莉、白丝、AI、机器人、加入了群聊
+# {
+#   "系统": ["你", "加入了群聊"]
+# }
 """------------------------------------------------------快捷指令------------------------------------------------------"""
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
 args = None

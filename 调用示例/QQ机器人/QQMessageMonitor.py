@@ -5,6 +5,7 @@
 import os
 import re
 import io
+import json
 from datetime import datetime
 from time import sleep
 from tkinter import Tk  # 用来获取剪切板的内容的
@@ -142,8 +143,10 @@ class QQMessageMonitor:
         self.keyword_respond = False    # 是否启动关键词自动回复
         self.message_keyword = list()   # 消息关键词
         self.sender_keyword = list()   # 发送者关键词.txt
-        self.sender_keyword_map = dict()    # 指定发送者的关键词
-
+        self.message_sender_keyword = dict()    # 指定发送者的关键词
+        """关键词录入"""
+        # 发送者及其关键词内容读入
+        self.keyword_read() # 关键词读取
 
 
     def parameter_validation(self):
@@ -653,6 +656,74 @@ class QQMessageMonitor:
             print(f"\033[93mmonitor_message下标溢出：无法获取子控件，原始错误：{e}\033[0m",end="\t")
             print(f"\033self.message_list子孩子控件数:{len(self.message_list)}\033[0m")  # 打控件的子孩子数
 
+    def keyword_read(self):
+        """关键词读取和正则化处理(读取当前目录下的“关键词回复”文件夹下的文件录入关键字)
+        返回值：True
+        """
+        try:
+            with open("./关键词回复/发送者及其关键词.json", "r", encoding="utf-8") as json_file:
+                self.message_sender_keyword = json.load(json_file)  # 监测指定的人和关键字
+        except json.JSONDecodeError as e:
+            print(f"json文件的格式错误: {e}")
+        # 消息关键词内容读入(去除首尾空白判断是否分割内容)
+        with open("./关键词回复/消息关键词.txt", "r", encoding="utf-8") as message_keyword_file:
+            if content := message_keyword_file.read().strip():  # 使用海象运算符简化代码
+                self.message_keyword = content.split("、")
+            else:
+                self.message_keyword = []  # 文件为空时返回干净的空列表
+        # 发送者关键词内容读入(去除首尾空白判断是否分割内容)
+        with open("./关键词回复/发送者关键词.txt", "r", encoding="utf-8") as sender_keyword_file:
+            if content := sender_keyword_file.read().strip():  # 使用海象运算符简化代码
+                self.sender_keyword = content.split("、")
+            else:
+                self.sender_keyword = []  # 文件为空时返回干净的空列表
+        # 判断是否有关键词存在，存在就开启关键词自动回复
+        if any([self.message_keyword, self.sender_keyword, self.message_sender_keyword]):
+            self.keyword_respond = True   # 开启关键词自动回复
+        if self.message_sender_keyword:     # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
+            # 发送者及其关键词的正则处理
+            for sender_name in self.message_sender_keyword:  # 遍历键（发送者的名字）
+                message_keyword = self.message_sender_keyword[sender_name]  # 获取发送者关键词列表(为了转正则)
+                # 安全转为正则表达式，把键值替换为正则对象
+                self.message_sender_keyword[sender_name] = re.compile(r'|'.join(map(re.escape, message_keyword)))
+
+        if self.message_keyword:        # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
+            # 消息关键词的处理
+            self.message_keyword = re.compile(r'|'.join(map(re.escape, self.message_keyword)))  # 安全转为正则表达式
+        if self.sender_keyword:         # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
+            # 发送者关键词的处理
+            self.sender_keyword = re.compile(r'|'.join(map(re.escape, self.sender_keyword)))  # 安全转为正则表达式
+        print(f"关键发送者及其关键词:{self.message_sender_keyword}")
+        print(f"关键词:{self.message_keyword}")
+        print(f"关键发送者:{self.sender_keyword}")
+        return True
+
+
+    def message_keyword_jude(self, text):
+        """消息关键词判断(拿到正则表达式对象)
+        参数 ： text : 需要判断的文本
+        返回值： 如果有消息有关键词就返回True，否则为False
+        """
+        # 先判断是否为列表(没有设置关键词)，再判断是否存在关键词
+        return bool(self.message_keyword.findall(text)) if not isinstance(self.message_keyword, list) else False
+
+    def sender_keyword_jude(self, sender_name):
+        """关键发送者判断(拿到正则表达式对象)
+        参数 ： sender_name : 发送者的名字
+        返回值： 如果有消息有关键词就返回True，否则为False
+        """
+        # 先判断是否为列表(没有设置关键词)，再判断是否存在关键词
+        return bool(self.sender_keyword.findall(sender_name)) if not isinstance(self.sender_keyword, list) else False
+
+    def message_sender_keyword_jude(self, sender_name, text):
+        """高级关键词判断(指定发送者加关键词、拿到正则表达式对象)
+        参数 : sender_name : 发送者的姓名
+        text : 需要判断的文本
+        返回值：如果字典里没有发送者就直接返回False,有则进入关键词判断，如果有才返回True
+        """
+        # 判断人是否在字典里面再是否存在判断关键词
+        return sender_name in self.message_sender_keyword and self.message_sender_keyword[sender_name].findall(text)
+
     def hook_message(self,message_dict,max_processing_queues=10):
         """设置需要截获的消息,可以是发送者，时间，发送消息的内容
         参数： message_dict ： 单条消息字典{"发送者": "yan di fei","发送消息": "hello world","发送时间": "10:10:20"}
@@ -669,22 +740,21 @@ class QQMessageMonitor:
             print(f"\033[94m我被{message_dict["发送者"]}艾特了，消息是:{message_dict["发送消息"]}\033[0m")
             self.message_processing_queues.append(message_dict)  # 加入消息处理队列
         # 检查是否开启了关键词自动回复,仅当开启了才会
-        if not self.keyword_respond:
-            return False   # 没有开启关键词自动回复直接退出
+        elif not self.keyword_respond or message_dict["发送者"] == self.monitor_name:  # 关键词触发需要3个条件：1.设置了关键词2.消息体存在关键词3.消息体的发送者不是自己
+            return True   # 没有开启关键词自动回复直接退出
         # 截获指定的消息（关键词）进行处理
-        elif message_dict["发送消息"] in self.message_keyword:   # 消息关键词列表
-            print(f"\033[94m截获关键词:{message_dict["发送消息"]}，发送者是:{message_dict["发送者"]}\033[0m")
-            self.message_processing_queues.append(message_dict)  # 加入消息处理队列
-        # 截获指定的发送者进行处理
-        elif message_dict["发送者"] in self.sender_keyword:
-            print(f"\033[94m截获关键发送者:{message_dict["发送者"]}，发送消息是:{message_dict["发送消息"]}\033[0m")
+        elif self.message_keyword_jude(message_dict["发送消息"]):   # 正则判断消息(如果发送者是自己就过滤关键词触发)
+            print(f"\033[94m截获关键词消息:{message_dict["发送消息"]}，发送者是:{message_dict["发送者"]}\033[0m")
             self.message_processing_queues.append(message_dict)  # 加入消息处理队列
         # 截获指定发送者存在关键词的消息进行处理(发送者全名在字典你面，发送者的关键词在消息体里面)
-        elif message_dict["发送者"] in self.sender_keyword_map and self.sender_keyword_map[message_dict["发送者"]] in message_dict["发送消息"]:
+        elif self.message_sender_keyword_jude(message_dict["发送者"], message_dict["发送消息"]):     # 正则判断发送者及其消息(如果发送者是自己就过滤关键词触发)
             print(f"\033[94m截获发送者:{message_dict["发送者"]}，消息是:{message_dict["发送消息"]}\033[0m")
             self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+        # 截获指定的发送者进行处理
+        elif self.sender_keyword_jude(message_dict["发送者"]):     # 正则判断发送者(如果发送者是自己就过滤关键词触发)
+            print(f"\033[94m截获关键发送者:{message_dict["发送者"]}，发送消息是:{message_dict["发送消息"]}\033[0m")
+            self.message_processing_queues.append(message_dict)  # 加入消息处理队列
         return True
-
 
 if __name__ == '__main__':
     # chat1 = QQMessageMonitor("Q群号", "Q群中你的名字")
