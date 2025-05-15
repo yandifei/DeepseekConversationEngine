@@ -165,6 +165,7 @@ class DeepseekConversationEngine:
             self.model_choice = "deepseek-chat" # 切换为V3模型
             self.clear_flag = 5  # 对话历史最大数，超过就清空最开始的那一次的对话(V3默认为5轮)
             if out: print(f"已切换至V3模型")
+        return True
 
     def set_frequency_penalty(self, frequency_penalty = 0.0):
         """控制生成内容的重复性 -2.0（鼓励重复）到 2.0（严格避免重复）、0（无惩罚）

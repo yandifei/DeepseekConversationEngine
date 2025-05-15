@@ -15,11 +15,14 @@ from deepseek_conversation_engine import DeepseekConversationEngine
 uiautomation.SetClipboardText("") # 设置剪切板内容为空避免出现问题(第一次粘贴可能导致大量的文本出现)
 all_role_name = "、".join([filename.replace(".txt", "") for filename in os.listdir("提示库/") if filename.endswith(".txt")])     #遍历有效文件
 """--------------------------------------------------需要修改的参数----------------------------------------------------"""
+with open("文档/软件声明.txt", "r", encoding="utf-8") as software_notices:    # 读入软件声明
+    print(f"\033[94m{software_notices.read()}\033[0m")  # 打印输出
+print()
 qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")   # 鸣潮自动刷声骸 怼人模式
 qq_monitor_name = input("请输入你的身份(你在QQ群的名称):")
 qq_administrator = input("请输入超级管理员名称(机器人默认超管，不输入则不设置):")
 role = input(f"请输入自动回复的人设(提示库人设:{all_role_name}):")
-win_xy = input("请输入QQ窗口窗口的位置(可以不填，默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
+win_xy = input("请输入QQ窗口窗口的位置(建议不填，默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
 win_xy = win_xy.replace("，",",") # 转换，字符
 if not win_xy:  # 输入为空
     win_x = win_y = None
@@ -27,7 +30,7 @@ else:
     win_x, win_y = win_xy.split(",")
     win_x, win_y = int(win_x), int(win_y)
 administrator = [qq_monitor_name]  # 设置超级管理员("雁低飞","yandifei")
-administrator.append(qq_administrator) if qq_administrator != "" else print("未设置管理员")
+administrator.append(qq_administrator) if qq_administrator != "" else print("选择了未设置管理员")
 """----------------------------------------------------实例化对象------------------------------------------------------"""
 chat_win1 = QQMessageMonitor(qq_group_name, qq_monitor_name)    # 会自动置顶和自动展示(最小化显示)
 deepseek = DeepseekConversationEngine(role)  # 实例化对象
@@ -39,16 +42,13 @@ print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
 print(f"数据存放路径:\t{chat_win1.message_data_txt}")
 for one_message in chat_win1.message_list:  # 打印初次绑定后的消息
     print(one_message)
-# 鸣潮、猫、猫猫、可爱、萝莉、白丝、AI、机器人、加入了群聊
-# {
-#   "系统": ["你", "加入了群聊"]
-# }
 """------------------------------------------------------快捷指令------------------------------------------------------"""
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
 args = None
 # 函数映射表(使用lambda来匿名函数)，直接把指点放到环境变量外，防止每次加载的时候都是
 function_map = {
     # QQ管理这类的专属指令
+    "#所有管理员": [True, lambda : "\n".join([qq_administrator_name for qq_administrator_name in chat_win1.get_qq_group_administrator()]),"无法查询"],
     "#开启关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",True),"开启关键词自动回复","开启关键词自动回复"], # 这个返回None
     "#关闭关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",False),"关闭关键词自动回复","关闭关键词自动回复"], # 这个返回None
     # 特殊指令
