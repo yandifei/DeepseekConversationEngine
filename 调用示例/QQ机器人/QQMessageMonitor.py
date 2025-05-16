@@ -146,6 +146,7 @@ class QQMessageMonitor:
         self.message_keyword = list()   # 消息关键词
         self.sender_keyword = list()   # 发送者关键词.txt
         self.message_sender_keyword = dict()    # 指定发送者的关键词
+        self.filter_sender_keyword = list()     # 过滤发送者关键词.txt
         """关键词录入"""
         # 发送者及其关键词内容读入
         self.keyword_read() # 关键词读取
@@ -689,25 +690,34 @@ class QQMessageMonitor:
                 self.sender_keyword = content.split("、")
             else:
                 self.sender_keyword = []  # 文件为空时返回干净的空列表
+        # 指定过滤的发送者的消息，不对该发送者的消息进行处理
+        with open("./关键词回复/过滤发送者关键词.txt", "r", encoding="utf-8") as sender_keyword_file:
+            if content := sender_keyword_file.read().strip():  # 使用海象运算符简化代码
+                self.filter_sender_keyword = content.split("、")
+            else:
+                self.filter_sender_keyword = []  # 文件为空时返回干净的空列表
         # 判断是否有关键词存在，存在就开启关键词自动回复
-        if any([self.message_keyword, self.sender_keyword, self.message_sender_keyword]):
+        if any([self.message_keyword, self.sender_keyword, self.message_sender_keyword, self.filter_sender_keyword]):
             self.keyword_respond = True   # 开启关键词自动回复
+        # 发送者及其关键词的正则处理
         if self.message_sender_keyword:     # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
-            # 发送者及其关键词的正则处理
             for sender_name in self.message_sender_keyword:  # 遍历键（发送者的名字）
                 message_keyword = self.message_sender_keyword[sender_name]  # 获取发送者关键词列表(为了转正则)
                 # 安全转为正则表达式，把键值替换为正则对象
                 self.message_sender_keyword[sender_name] = re.compile(r'|'.join(map(re.escape, message_keyword)))
-
+        # 消息关键词的处理
         if self.message_keyword:        # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
-            # 消息关键词的处理
             self.message_keyword = re.compile(r'|'.join(map(re.escape, self.message_keyword)))  # 安全转为正则表达式
+        # 发送者关键词的处理
         if self.sender_keyword:         # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
-            # 发送者关键词的处理
             self.sender_keyword = re.compile(r'|'.join(map(re.escape, self.sender_keyword)))  # 安全转为正则表达式
-        # print(f"关键发送者及其关键词:{self.message_sender_keyword}")
-        # print(f"关键词:{self.message_keyword}")
-        # print(f"关键发送者:{self.sender_keyword}")
+        # 过滤发送者关键词处理
+        if self.filter_sender_keyword:  # 存在关键词才处理(如果不加就会导致如果关键词为空则匹配所有)
+            self.filter_sender_keyword = re.compile(r'|'.join(map(re.escape, self.filter_sender_keyword)))  # 安全转为正则表达式
+        # print(f"发送者及其关键词:{self.message_sender_keyword}")
+        # print(f"消息关键词:{self.message_keyword}")
+        # print(f"发送者关键词:{self.sender_keyword}")
+        # print(f"过滤发送者关键词:{self.filter_sender_keyword}")
         return True
 
     def message_keyword_jude(self, text):
@@ -733,7 +743,15 @@ class QQMessageMonitor:
         返回值：如果字典里没有发送者就直接返回False,有则进入关键词判断，如果有才返回True
         """
         # 判断人是否在字典里面再是否存在判断关键词
-        return sender_name in self.message_sender_keyword and self.message_sender_keyword[sender_name].findall(text)
+        return (sender_name in self.message_sender_keyword and self.message_sender_keyword[sender_name].findall(text)) if not isinstance(self.message_sender_keyword, dict) else False
+
+    def fiter_keyword_jude(self, sender_name):
+        """过滤关键词判断
+        参数 : sender_name : 发送者的姓名
+        返回值：如果排除发送者关键词没有该发送者就直接返回False,有则进入关键词判断，如果有才返回True
+        """
+        # 如果有限制就去掉限制
+        return bool(self.filter_sender_keyword.findall(sender_name)) if not isinstance(self.filter_sender_keyword, list) else False
 
     def hook_message(self,message_dict,max_processing_queues=10):
         """设置需要截获的消息,可以是发送者，时间，发送消息的内容
@@ -753,6 +771,10 @@ class QQMessageMonitor:
         # 检查是否开启了关键词自动回复,仅当开启了才会
         elif not self.keyword_respond or message_dict["发送者"] == self.monitor_name:  # 关键词触发需要3个条件：1.设置了关键词2.消息体存在关键词3.消息体的发送者不是自己
             return True   # 没有开启关键词自动回复直接退出
+        # 检查是否为排除对象
+        elif self.fiter_keyword_jude(message_dict["发送者"]):   # 正则判断是否为排除的发送者
+            print(f"\033[95m排除对{message_dict["发送者"]}的消息处理\033[0m")  # 亮紫色
+            return True   # 存在排除的发送者直接返回退出
         # 截获指定的消息（关键词）进行处理
         elif self.message_keyword_jude(message_dict["发送消息"]):   # 正则判断消息(如果发送者是自己就过滤关键词触发)
             print(f"\033[94m截获关键词消息:{message_dict["发送消息"]}，发送者是:{message_dict["发送者"]}\033[0m")
