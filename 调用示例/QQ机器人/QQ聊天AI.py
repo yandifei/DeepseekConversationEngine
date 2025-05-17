@@ -31,11 +31,11 @@ class InitSettings:
         """加载用户配置"""
         # 检查配置存在标志(判断是否需要用户配置)
         if self.config["用户配置"].getboolean("configuration_exists_flag"):
-            is_modify = input("\033[92m是否沿用上次的配置(直接回车为y)？(y/n):\033[0m")
+            is_modify = input("\033[35m是否沿用上次的配置(直接回车为y)？(y/n):\033[0m")
             while is_modify not in ["y","n",""]:    # 如果字符不在这个列表就重输
                 is_modify = input("\033[91m输入错误，请重新输入(y/n):\033[0m")
             if is_modify in {"y", ""}:      # 延续上一次的配置
-                print("\033[92m----------------开始导入上次的配置----------------\033[0m")
+                print("\033[94m----------------开始导入上次的配置----------------\033[0m")
                 self.configure_read(True)
                 print("\033[92m-------------------已完成配置导入-----------------\033[0m")
             else: # 录入新的配置
@@ -48,24 +48,27 @@ class InitSettings:
         # 读取软件声明的键值
         print("\033[92m---------------------项目声明-----------------\033[0m")
         notice = "\n".join([self.config["软件声明"][declaration] for declaration in self.config["软件声明"]])
-        print(f"\033[94m{notice}\033[0m")
-        print("\033[92m-------------------已完成配置导入-----------------\033[0m")
+        print(f"\033[36m{notice}\033[0m")
+        print("\033[92m-------------------开始配置初始化-----------------\033[0m")
 
     def configure_entry(self):
         """接收用户配置"""
-        self.qq_group_name = input("\033[92m请输入监听的群聊名称(如果有群备注请填备注名):\033[0m")
-        self.config["用户配置"]["qq_group_name"] = self.qq_group_name  # 读取用户名
-        self.user_name = input("\033[92m请输入你的身份(你在QQ群的名称):\033[0m")
-        self.config["用户配置"]["user_name"] = self.user_name   # 读Q群名
-        self.qq_administrator = input("\033[92m请输入超级管理员名称(机器人默认超管，不输入则不设置):\033[0m")
-        self.config["用户配置"]["qq_administrator"] = self.qq_administrator   # 读超管
-        # 读入提示库里的所有txt文件
+        self.qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")
+        self.config["用户配置"]["qq_group_name"] = self.qq_group_name  # 录入取用户名
+        self.user_name = input("请输入你的身份(你在QQ群的名称):")
+        self.administrator_list.append(self.user_name)  # 添加自己为超管
+        self.config["用户配置"]["user_name"] = self.user_name   # 录入Q群名
+        self.qq_administrator = input("请输入超级管理员名称(机器人默认超管，不输入则不设置):")
+        self.administrator_list.append(self.qq_administrator)   # 添加额外的超管
+        self.config["用户配置"]["qq_administrator"] = self.qq_administrator   # 录入超管
+        # 录入入提示库里的所有txt文件
         roles = [name.replace(".txt", "") for name in os.listdir("提示库/") if name.endswith(".txt")]
         roles = "、".join(roles)  # 组合字符串
-        self.init_role = input(f"\033[92m请输入自动回复的人设，直接回车即不设置人设(提示库人设:{roles}):\033[0m")
-        self.config["用户配置"]["init_role"] = self.init_role   # 读取初始人设
-        class_win_xy = input("\033[92m请输入QQ窗口窗口的位置(直接回车默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):\033[0m")
-        self.config["用户配置"]["window_location"] = class_win_xy   # 读取窗口位置
+        print(f"提示库人设:{roles}")
+        self.init_role = input(f"请输入自动回复的人设(在提示库中)，直接回车即不设置任何人设:")
+        self.config["用户配置"]["init_role"] = self.init_role   # 录入取初始人设
+        class_win_xy = input("请输入QQ窗口窗口的位置(直接回车默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
+        self.config["用户配置"]["window_location"] = class_win_xy   # 录入取窗口位置
         class_win_xy = class_win_xy.replace("，", ",")  # 转换，字符
         if not class_win_xy:  # 输入为空
             self.win_x = self.win_y = None
@@ -97,8 +100,9 @@ class InitSettings:
             print("\033[91m未设置QQ群的名称\033[0m")
         # 读超管来添加额外的超管
         if self.config["用户配置"]["qq_administrator"] != "":
-            self.qq_administrator = self.config["用户配置"]["user_name"]
-            self.administrator_list.append(self.user_name)   # 额外添加超级管理员
+            self.qq_administrator = self.config["用户配置"]["qq_administrator"]
+            self.administrator_list.append(self.user_name)   # 添加自己为超级管理员
+            self.administrator_list.append(self.qq_administrator)   # 额外添加超级管理员
             if out: print(f"\033[95m当前超管:\033[96m{"、".join([name for name in self.administrator_list])}\033[0m")
         else:
             self.qq_administrator = None
