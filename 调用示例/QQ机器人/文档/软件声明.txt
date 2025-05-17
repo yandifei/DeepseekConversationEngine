@@ -1,8 +1,0 @@
-1.本程序是基于自主研发的DeepseekConversationEngine(deepseek对话引擎)类库开发的调用示例，旨在直观展示如何使用该库进行项目开发。
-2.项目根地址：https://github.com/yandifei/DeepseekConversationEngine/tree/main/调用示例/QQ机器人。
-3.项目根地址(DeepseekConversationEngine类库)：https://github.com/yandifei/DeepseekConversationEngine。
-4.有什么问题优先查看文档，如果文档没有说明去问AI(直接粘贴报错提示)，重大异常请联系作者(QQ:2128949020)。
-5.该项目的根本目的是打造接入DeepSeek的API接口实现“真正满血”的问题解答和为“广大用户”提供“情绪价值”。
-6.必须先在环境变量里配置好密钥才能使用该程序，不懂的可以去看相关视频或查看文档里的DeepseekConversationEngine(deepseek对话引擎).pdf
-7.提示库提供了预定的人设(已经调教好了)，可以先在提示库里面创建好自己的人设，也可以在使用过程中通过指令修改或自定义人设。
-8.如果你喜欢该项目或觉得该项目对你有所帮助，感谢您的使用。开源不易，如果可以请在项目根地址给我一个Start吧。

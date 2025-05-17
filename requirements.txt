@@ -1,4 +1,0 @@
-openai==1.78.1
-Requests==2.32.3
-setuptools==72.1.0
-transformers==4.49.0

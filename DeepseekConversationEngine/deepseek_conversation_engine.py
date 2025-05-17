@@ -1209,13 +1209,45 @@ class DeepseekConversationEngine:
 
 
 if __name__ == '__main__':
-    deepseek = DeepseekConversationEngine("专属猫娘")  # 实例化对象(设置人设为专属猫娘)
+    deepseek = DeepseekConversationEngine()  # 实例化对象(设置人设为专属猫娘)
     deepseek.set_stream(True)  # 设置流式输出
-    while True:
-        content = input("我：")
-        if content == "#退出": break  # 退出循环调用对话的指令
-        deepseek.conversation_engine(content)  # 调用对话引擎
-    print("已退出对话引擎的调用")
+    # while True:
+    #     content = input("我：")
+    #     if content == "#退出": break  # 退出循环调用对话的指令
+    #     deepseek.conversation_engine(content)  # 调用对话引擎
+    # print("已退出对话引擎的调用")
+    text = """"
+调整为代码模式，回答过程必须十分严谨，不得有半点细节跳过
+现在鸣潮这个游戏有一个比赛：小团快跑 。
+基础行动规则
+比赛过程中，团子们会通过掷骰子随机决定行动顺序和前进步数。
+回合进行的过程中，团子有概率发动自身特有的技能，争取比其他团子
+更快到达终点。
+后方的团子移动的终点格子如果有其他团子，则会和终点格子的团子堆
+叠在一起。
+堆叠态行动规则
+当团子处于堆叠的状态时，下方的团子如果先移动，会带着头顶的所有
+团子一起行动。处于堆叠状态的团子中，越往上的团子排名越靠前。
+行动规则
+一共有24个格子，6种团子进行抛骰子，骰子点数只有是1、2、3。哪个团子先走完24个格子就先获得胜利。
+以下是6种团子
+洛可可团子
+如果是最后一个移动，额外前进2格。
+布兰特团子如果是第一个移动，额外前进2格。
+坎特蕾拉团子
+移动过程中首次遇到团子时，会和此格子所有团子堆叠，在本回合一起移动。每场比赛最多触发1次。
+赞妮团子
+骰子只会掷出1或3。开始移动时，如果处于堆叠状态下回合有40%概率额外前进2格。
+卡提希娅团子
+每场比赛最多触发1次。自身移动结束后，若处于最后一名，本场比赛剩余回合都会60%概率额外前进2格。
+菲比团子
+50%概率额外前进1格
 
+现在我要具体分析过程，请给我深度分析规则并用py写出代码(每行给我注释)，我要进行多次模拟
+    """
+    deepseek.set_model("R1", True)
+    deepseek.set_temperature(0.0, True)
+    deepseek.ask(text, True)
+    deepseek.reasoning_content_output(True)
 
 

@@ -28,10 +28,10 @@ setup(
     ],
     python_requires=">=3.13.1",                      # 项目支持的Python版本
     install_requires=[
-        "openai==1.78.1",
+        "openai==1.79.0",
         "Requests==2.32.3",
         "setuptools==72.1.0",
-        "transformers==4.49.0"
+        "transformers==4.51.3"
     ],               # 项目必须的依赖
     include_package_data=True                       # 是否包含非Python文件（如资源文件）
 )

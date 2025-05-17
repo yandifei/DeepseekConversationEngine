@@ -41,8 +41,8 @@ class QQMessageMonitor:
         self.y = self.geometry.top # 窗口y坐标
         self.weight = self.geometry.width # 窗口长
         self.height = self.geometry.height # 窗口宽
-        print(f"成功绑定“{win_name}”{self.jude_group_or_friend(self.qq_chat_win)}窗口并置顶窗口\t监听者：{monitor_name}")# 把对象进行绑定，动态属性修改并打印
-        print(f"“{win_name}”句柄:{self.qq_chat_hwnd}\t进程ID:{self.pid}\t窗口大小:{self.geometry}")
+        print(f"成功绑定 \033[96m{win_name}\033[0m {self.jude_group_or_friend(self.qq_chat_win)}窗口并置顶窗口\t监听者：{monitor_name}")# 把对象进行绑定，动态属性修改并打印
+        print(f"\033[96m{win_name}\033[0m 窗口句柄:{self.qq_chat_hwnd}\t进程ID:{self.pid}\t窗口大小:{self.geometry}")
         """------------------------------------------聊天窗口控制监控相关---------------------------------------------"""
         # 文档->组->组2(子孩子有2个组，第一个组是窗口控制按钮相关，第二个组是非窗口控制按钮的界面)
         self.main_chat_win = self.qq_chat_win.GetChildren()[0].GetChildren()[0].GetChildren()[1]
@@ -151,7 +151,6 @@ class QQMessageMonitor:
         # 发送者及其关键词内容读入
         self.keyword_read() # 关键词读取
 
-
     def parameter_validation(self):
         """创建对象时对输入的信息进行校验"""
         if self.win_name == "":
@@ -224,6 +223,8 @@ class QQMessageMonitor:
         # 检查结构（不需要担心是QQ窗口，考虑qq群还是qq好友就行）
         # obj.Refind()    # 刷新控件
         # self.qq_chat_win = self.find_qq_chat_win(self.top_window_traversal())  # 重新强制刷新窗口
+        # 尝试了这么多方法还是这个实在,确保窗口控件能被成功读取
+        self.top_win()  # 重新置顶窗口
         if obj.GetChildren()[0].LocalizedControlType != "文档":
             # sleep(1)
             print(obj.GetChildren()[0].LocalizedControlType)
@@ -483,10 +484,11 @@ class QQMessageMonitor:
                 qq_group_administrator_list.append(administrator.GetChildren()[1].Name)     # 添加管理员身份
         return qq_group_administrator_list
 
-    def create_directory(self,path=None,use=False):
+    def create_directory(self,path=None,use=False,out=False):
         """创建监听者和监听窗口的目录
         参数：path：默认为None(库的上级目录下创建)，如果填入就在填入路径下创建
         use: 默认为false如果指定目录存在要创建的文件夹就爆错
+        out : 是否打印输出提示,默认False
         """
         monitor_directory = re.sub(r'[\\/:*?"<>|]', '_', self.monitor_name) # 剔除监听者无效字符
         messages_data_directory = re.sub(r'[\\/:*?"<>|]', '_', self.win_name) # 剔除监听窗口无效字符
@@ -494,15 +496,15 @@ class QQMessageMonitor:
             try:
                 self.message_data_directory = os.path.join(os.getcwd(),monitor_directory,messages_data_directory)   # 路径拼接
                 os.makedirs(self.message_data_directory)
-                print(f"成功创建监听者目录:{monitor_directory}\t{self.group_or_friend}“{self.win_name}”消息将存放到该目录中")
+                if out: print(f"成功创建监听者目录:{monitor_directory}\t{self.group_or_friend}“{self.win_name}”消息将存放到该目录中")
             except FileExistsError: # 路径一定存在且合法
-                print(f"已存在监听者目录:{monitor_directory}\t{self.group_or_friend}“{self.win_name}”的监听消息将继续存放到该目录中")
+                if out: print(f"已存在监听者目录:{monitor_directory}\t{self.group_or_friend}“{self.win_name}”的监听消息将继续存放到该目录中")
         else:
             try:
                 path = rf"{path}" # 对输入的路径进行转义
                 self.message_data_directory = os.path.join(path, monitor_directory,messages_data_directory) # 拼接多级目录
                 os.makedirs(self.message_data_directory)  # 创建多级目录
-                print(f"成功创建监听者目录:{monitor_directory}\t{self.group_or_friend}“{self.win_name}”消息将存放到该目录中")
+                if out: print(f"成功创建监听者目录:{monitor_directory}\t{self.group_or_friend}“{self.win_name}”消息将存放到该目录中")
             except FileExistsError:
                 if not use: # 如果未开启沿用就报错(防止不小心对重要文件进行操作)
                     raise EnvironmentError(f"文件夹已存在“{monitor_directory}”目录，请转移该目录或删除该目录，如果要沿用该目录请填入参数")

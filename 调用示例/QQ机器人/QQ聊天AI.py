@@ -1,46 +1,139 @@
-"""---------------------------------------------------程序启动动画-----------------------------------------------------"""
+"""---------------------------------------------------导包和导库-----------------------------------------------------"""
+# 内置库
+import sys
+import types
+import configparser
+# 第三方库
+# 自己的库
+from QQMessageMonitor import * # 导包
+from deepseek_conversation_engine import DeepseekConversationEngine
+"""--------------------------------------------------QQ聊天AI初始化-----------------------------------------------------"""
+uiautomation.SetClipboardText("") # 设置剪切板内容为空避免出现问题(第一次粘贴可能导致大量的文本出现)
+# 创建类对象来管理初始化和配置保存（没办法，内容太多了，这里仅仅时简单管理）
+class InitSettings:
+    def __init__(self):
+        """初始化配置类"""
+        self.qq_group_name = None
+        self.user_name = None
+        self.qq_administrator = None
+        self.init_role = None
+        self.win_x = None   # 窗口x位置
+        self.win_y = None   # 窗口y位置
+        self.administrator_list = list() # 超级管理员列表
+        # 创建一个 INI 格式配置文件的解析器对象(严格区分大小写)
+        self.config = configparser.ConfigParser(allow_no_value=False, strict=True)
+        # 读入配置文件内容(指定编码格式是utf-8，不然会乱码(默认GBK))
+        self.config.read("./UserSettings.ini", encoding="utf-8")
+        self.print_notice()  # 输出声明
+        self.loading_settings()     # 加载配置
+
+    def loading_settings(self):
+        """加载用户配置"""
+        # 检查配置存在标志(判断是否需要用户配置)
+        if self.config["用户配置"].getboolean("configuration_exists_flag"):
+            is_modify = input("\033[92m是否沿用上次的配置(直接回车为y)？(y/n):\033[0m")
+            while is_modify not in ["y","n",""]:    # 如果字符不在这个列表就重输
+                is_modify = input("\033[91m输入错误，请重新输入(y/n):\033[0m")
+            if is_modify in {"y", ""}:      # 延续上一次的配置
+                print("\033[92m----------------开始导入上次的配置----------------\033[0m")
+                self.configure_read(True)
+                print("\033[92m-------------------已完成配置导入-----------------\033[0m")
+            else: # 录入新的配置
+                self.configure_entry()  # 录入用户置并保存
+        else:   # 这里else是因为怕有人进入ini改了东西把标志位改成了其他玩意
+            self.configure_entry()  # 初次录入用户配置并保存
+
+    def print_notice(self):
+        """打印声明"""
+        # 读取软件声明的键值
+        print("\033[92m---------------------项目声明-----------------\033[0m")
+        notice = "\n".join([self.config["软件声明"][declaration] for declaration in self.config["软件声明"]])
+        print(f"\033[94m{notice}\033[0m")
+        print("\033[92m-------------------已完成配置导入-----------------\033[0m")
+
+    def configure_entry(self):
+        """接收用户配置"""
+        self.qq_group_name = input("\033[92m请输入监听的群聊名称(如果有群备注请填备注名):\033[0m")
+        self.config["用户配置"]["qq_group_name"] = self.qq_group_name  # 读取用户名
+        self.user_name = input("\033[92m请输入你的身份(你在QQ群的名称):\033[0m")
+        self.config["用户配置"]["user_name"] = self.user_name   # 读Q群名
+        self.qq_administrator = input("\033[92m请输入超级管理员名称(机器人默认超管，不输入则不设置):\033[0m")
+        self.config["用户配置"]["qq_administrator"] = self.qq_administrator   # 读超管
+        # 读入提示库里的所有txt文件
+        roles = [name.replace(".txt", "") for name in os.listdir("提示库/") if name.endswith(".txt")]
+        roles = "、".join(roles)  # 组合字符串
+        self.init_role = input(f"\033[92m请输入自动回复的人设，直接回车即不设置人设(提示库人设:{roles}):\033[0m")
+        self.config["用户配置"]["init_role"] = self.init_role   # 读取初始人设
+        class_win_xy = input("\033[92m请输入QQ窗口窗口的位置(直接回车默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):\033[0m")
+        self.config["用户配置"]["window_location"] = class_win_xy   # 读取窗口位置
+        class_win_xy = class_win_xy.replace("，", ",")  # 转换，字符
+        if not class_win_xy:  # 输入为空
+            self.win_x = self.win_y = None
+        else:
+            self.win_x, self.win_y = class_win_xy.split(",")
+            self.win_x, self.win_y = int(self.win_x), int(self.win_y)
+        # 修改配置标志位为True
+        self.config["用户配置"]["configuration_exists_flag"] = "True"  # 修改配置标志位(下一次就不用输了)
+        with open("UserSettings.ini", "w", encoding="utf-8") as ini_file:  # 保存修改的配置
+            self.config.write(ini_file)
+
+    def configure_read(self, out = False):
+        """配置读取
+        参数: out : 是否打印输入录入值，默认False
+        """
+        # 读取用户名
+        if self.config["用户配置"]["user_name"] != "":
+            self.user_name = self.config["用户配置"]["user_name"]
+            if out: print(f"\033[95m用户名:\033[96m{self.user_name}\033[0m")
+        else:
+            self.user_name = None
+            print("\033[91m未录入Q群中的名称\033[0m")
+        # 读Q群名
+        if self.config["用户配置"]["qq_group_name"] != "":
+            self.qq_group_name = self.config["用户配置"]["qq_group_name"]
+            if out: print(f"\033[95mQ群名称:\033[96m{self.qq_group_name}\033[0m")
+        else:
+            self.qq_group_name = None
+            print("\033[91m未设置QQ群的名称\033[0m")
+        # 读超管来添加额外的超管
+        if self.config["用户配置"]["qq_administrator"] != "":
+            self.qq_administrator = self.config["用户配置"]["user_name"]
+            self.administrator_list.append(self.user_name)   # 额外添加超级管理员
+            if out: print(f"\033[95m当前超管:\033[96m{"、".join([name for name in self.administrator_list])}\033[0m")
+        else:
+            self.qq_administrator = None
+            if out: print(f"\033[95m超管为自己\033[0m")
+        # 读取初始人设
+        if self.config["用户配置"]["init_role"] != "":
+            self.init_role = self.config["用户配置"]["init_role"]
+            if out: print(f"\033[95m初始人设:\033[96m{self.init_role}\033[0m")
+        else:
+            self.init_role = None
+            if out: print(f"\033[95m人设为空\033[0m")
+        # 读取窗口位置
+        if self.config["用户配置"]["window_location"] != "":
+            class_win_xy = self.config["用户配置"]["window_location"].replace("，", ",") # 获取字符并把中文的逗号搞成英文的
+            class_win_xy = class_win_xy.split(",")  # 获得分割后的字符
+            self.win_x, self.win_y = int(class_win_xy[0]), int(class_win_xy[1])  # 把坐标字符串转为整型
+            if out: print(f"\033[95m窗口左上角位置:\033[96m{self.win_x},{self.win_y}\033[0m")
+        else:
+            self.win_x, self.win_y = None, None
+            if out: print(f"\033[95m窗口左上角位置:\033[96m最左上角\033[0m")
+"""---------------------------------------------------关闭程序启动动画-----------------------------------------------------"""
 try:
     import pyi_splash
     pyi_splash.close()
 except ImportError:
     pass
-"""---------------------------------------------------导包和导库-----------------------------------------------------"""
-# 内置库
-import sys
-import types
-# 第三方库
-# 自己的库
-from QQMessageMonitor import * # 导包
-from deepseek_conversation_engine import DeepseekConversationEngine
-uiautomation.SetClipboardText("") # 设置剪切板内容为空避免出现问题(第一次粘贴可能导致大量的文本出现)
-all_role_name = "、".join([filename.replace(".txt", "") for filename in os.listdir("提示库/") if filename.endswith(".txt")])     #遍历有效文件
-"""--------------------------------------------------需要修改的参数----------------------------------------------------"""
-with open("文档/软件声明.txt", "r", encoding="utf-8") as software_notices:    # 读入软件声明
-    print(f"\033[94m{software_notices.read()}\033[0m")  # 打印输出
-print()
-qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")   # 鸣潮自动刷声骸 怼人模式
-qq_monitor_name = input("请输入你的身份(你在QQ群的名称):")
-qq_administrator = input("请输入超级管理员名称(机器人默认超管，不输入则不设置):")
-role = input(f"请输入自动回复的人设(提示库人设:{all_role_name}):")
-win_xy = input("请输入QQ窗口窗口的位置(建议不填，默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
-win_xy = win_xy.replace("，",",") # 转换，字符
-if not win_xy:  # 输入为空
-    win_x = win_y = None
-else:
-    win_x, win_y = win_xy.split(",")
-    win_x, win_y = int(win_x), int(win_y)
-administrator = [qq_monitor_name]  # 设置超级管理员("雁低飞","yandifei")
-administrator.append(qq_administrator) if qq_administrator != "" else print("选择了未设置管理员")
 """----------------------------------------------------实例化对象------------------------------------------------------"""
-chat_win1 = QQMessageMonitor(qq_group_name, qq_monitor_name)    # 会自动置顶和自动展示(最小化显示)
-deepseek = DeepseekConversationEngine(role)  # 实例化对象
+init_setting = InitSettings()   # 实例化初始设置的类
+chat_win1 = QQMessageMonitor(init_setting.qq_group_name, init_setting.user_name)    # 会自动置顶和自动展示(最小化显示)
+deepseek = DeepseekConversationEngine(init_setting.init_role)  # 实例化对象
 """--------------------------------------------------QQ窗口绑定处理----------------------------------------------------"""
-chat_win1.show_win()    # 展示窗口
-chat_win1.top_win()     # 置顶窗口
-chat_win1.move(win_x, win_y)        # 把窗口移动到最上角 0,1010
-print("窗口已放置最左上角并置顶，可通过鼠标拖拽拉伸")
-print(f"数据存放路径:\t{chat_win1.message_data_txt}")
-for one_message in chat_win1.message_list:  # 打印初次绑定后的消息
+chat_win1.move(init_setting.win_x, init_setting.win_y)          # 移动窗口
+print(f"\033[92m数据存放路径:  \033[96m{chat_win1.message_data_txt}\033[0m")
+print("\033[92m-------------------开启AI自动回复-----------------\033[0m")
+for one_message in chat_win1.message_list:  # 打印初次绑定后监测的消息(这部分的消息不收录)
     print(one_message)
 """------------------------------------------------------快捷指令------------------------------------------------------"""
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
@@ -166,7 +259,7 @@ def exit_qq_auto_reply(administrator_name):
     """判断是否退出QQ自动回复
     参数 ： administrator_name ： 超级管理员的名字
     """
-    if administrator_name in administrator:
+    if administrator_name in init_setting.administrator_list:
         print("\033[31m已停止QQ监听回复和退出deepseek对话引擎\033[0m")
         chat_win1.send_message("已停止QQ自动回复\n已退出deepseek对话引擎")
         sys.exit()  # 优雅退出程序
@@ -208,7 +301,3 @@ while True:
             deepseek.dialog_history_manage()    # 自动删除久远的对话历史
             chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
             print(f"\033[94m已完成“{sender}”的消息处理\033[0m")
-# except Exception as e:
-#     print(f"捕获到异常: {e}")
-#     # input("按Enter键退出...")  # 防止窗口立即关闭
-# : 'comtypes==1.4.10', 'mkl-service==2.4.0', 'pywin32==310', 'setuptools==72.1.0', 'uiautomation==2.0.28', 'wheel==0.45.1'
