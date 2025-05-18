@@ -679,7 +679,7 @@ class QQMessageMonitor:
             with open("./关键词回复/发送者及其关键词.json", "r", encoding="utf-8") as json_file:
                 self.message_sender_keyword = json.load(json_file)  # 监测指定的人和关键字
         except json.JSONDecodeError as e:
-            print(f"json文件的格式错误: {e}")
+            print(f"\033[91mjson文件的格式错误或json没有任何内容\033[0m")
         # 消息关键词内容读入(去除首尾空白判断是否分割内容)
         with open("./关键词回复/消息关键词.txt", "r", encoding="utf-8") as message_keyword_file:
             if content := message_keyword_file.read().strip():  # 使用海象运算符简化代码
@@ -742,10 +742,10 @@ class QQMessageMonitor:
         """高级关键词判断(指定发送者加关键词、拿到正则表达式对象)
         参数 : sender_name : 发送者的姓名
         text : 需要判断的文本
-        返回值：如果字典里没有发送者就直接返回False,有则进入关键词判断，如果有才返回True
+        返回值：先判断是否为字典，如果是字典就代表设置了关键发送者，如果不是直接返回False。判断是字典后如果关键词有才返回True
         """
         # 判断人是否在字典里面再是否存在判断关键词
-        return (sender_name in self.message_sender_keyword and self.message_sender_keyword[sender_name].findall(text)) if not isinstance(self.message_sender_keyword, dict) else False
+        return (sender_name in self.message_sender_keyword and self.message_sender_keyword[sender_name].findall(text)) if isinstance(self.message_sender_keyword, dict) else False
 
     def fiter_keyword_jude(self, sender_name):
         """过滤关键词判断
