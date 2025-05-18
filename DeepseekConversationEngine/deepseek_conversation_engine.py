@@ -672,11 +672,14 @@ class DeepseekConversationEngine:
         # {"role": "system", "content": role_txt}
         dialog_history = list() # 放置聊天记录
         temp_list = self.dialog_history  # 临时列表用来检查是否有人设
-        if self.dialog_history[0]["role"] == "system":  # 设置了人设
-            temp_list = self.dialog_history[1:]  # 排除人设
-        if len(temp_list) == 0:   # 没有聊天记录，无法打印
+        if len(self.dialog_history) == 0:       # 没有人设情况且没有聊天记录(如果有聊天记录也会跳过下面的elif)
             if out: print("\033[91m当前没有任何聊天记录\033[0m")
             return False
+        elif self.dialog_history[0]["role"] == "system":  # 设置了人设
+            temp_list = self.dialog_history[1:]  # 排除人设
+            if len(temp_list) == 0:   # (有人设的情况)没有聊天记录，无法打印
+                if out: print("\033[91m当前没有任何聊天记录\033[0m")
+                return False
         for ont_record in temp_list:  # 遍历聊天历史
             split_record = f'{"用户" if ont_record["role"] == "user" else "AI"}:{ont_record["content"]}'
             if out: print(split_record) # 打印记录

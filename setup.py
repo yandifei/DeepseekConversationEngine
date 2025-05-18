@@ -5,7 +5,7 @@ with open("README.md","r",encoding="utf-8") as readme_file:
 
 setup(
     name="DeepseekConversationEngine",               # 包名(PyPI注册名)
-    version="1.2.0",                                 # 版本号
+    version="1.2.1",                                 # 版本号
     author="雁低飞",                                  # 作者
     author_email="3058439878@qq.com",                # 邮箱
     description="多人设、多场景、多论对话自动化管理",    # 简短描述

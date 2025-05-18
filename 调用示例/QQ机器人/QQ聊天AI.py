@@ -31,11 +31,11 @@ class InitSettings:
         """加载用户配置"""
         # 检查配置存在标志(判断是否需要用户配置)
         if self.config["用户配置"].getboolean("configuration_exists_flag"):
-            is_modify = input("\033[35m是否沿用上次的配置(直接回车为y)？(y/n):\033[0m")
+            is_modify = input("\033[95m是否沿用上次的配置(直接回车为y)？(y/n):\033[0m")
             while is_modify not in ["y","n",""]:    # 如果字符不在这个列表就重输
                 is_modify = input("\033[91m输入错误，请重新输入(y/n):\033[0m")
             if is_modify in {"y", ""}:      # 延续上一次的配置
-                print("\033[94m----------------开始导入上次的配置----------------\033[0m")
+                print("\033[92m---------------开始导入上次的配置----------------\033[0m")
                 self.configure_read(True)
                 print("\033[92m-------------------已完成配置导入-----------------\033[0m")
             else: # 录入新的配置

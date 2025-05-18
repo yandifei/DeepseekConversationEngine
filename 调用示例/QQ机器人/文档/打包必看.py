@@ -1,11 +1,11 @@
 """
-非必要不要加这个字段：--uac-admin  这个是添加管理员权限的
-pyinstaller -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png -D QQ聊天AI.py
+非必要不要加这个字段：--uac-admin  这个是添加管理员权限的（其实这里我觉得是必要得，非必要是pyinstaller文档）
+pyinstaller -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png --uac-admin -D QQ聊天AI.py
 修改图标 + 启动图标 + 打包的主程序
 打包后需要的exe在dist文件夹里面
 
 打包出来后不能用的试试这个指令（我提示却这个组件）
-pyinstaller --hidden-import comtypes --add-data "B:/Pycharm/Anaconda3/envs/QQBot/Lib/site-packages/comtypes;comtypes" -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png -D QQ聊天AI.py
+pyinstaller --hidden-import comtypes --add-data "B:/Pycharm/Anaconda3/envs/QQBot/Lib/site-packages/comtypes;comtypes" -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png --uac-admin -D QQ聊天AI.py
 
 --hidden-import comtypes：强制包含 comtypes 模块。
 --add-data：确保 comtypes 的附属文件被正确打包（路径需根据实际虚拟环境调整）。
