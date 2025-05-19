@@ -15,17 +15,19 @@ class InitSettings:
         """初始化配置类"""
         self.qq_group_name = None
         self.user_name = None
-        self.qq_administrator = None
+        self.root = None    # 额外的超管
         self.init_role = None
         self.win_x = None   # 窗口x位置
         self.win_y = None   # 窗口y位置
-        self.administrator_list = list() # 超级管理员列表
+        self.administrator_list = list() # 管理员列表(Q群群主或管理员)
+        self.root_list = list() # 超管列表(自己AI账号和控制台添加的账号)
         # 创建一个 INI 格式配置文件的解析器对象(严格区分大小写)
         self.config = configparser.ConfigParser(allow_no_value=False, strict=True)
-        # 读入配置文件内容(指定编码格式是utf-8，不然会乱码(默认GBK))
+        # 初次读入配置文件内容(指定编码格式是utf-8，不然会乱码(默认GBK))
         self.config.read("./UserSettings.ini", encoding="utf-8")
         self.print_notice()  # 输出声明
         self.loading_settings()     # 加载配置
+        self.permission_isolation_flag = False  # 设置权限隔离标志,默认不隔离
 
     def loading_settings(self):
         """加载用户配置"""
@@ -56,17 +58,18 @@ class InitSettings:
         self.qq_group_name = input("请输入监听的群聊名称(如果有群备注请填备注名):")
         self.config["用户配置"]["qq_group_name"] = self.qq_group_name  # 录入取用户名
         self.user_name = input("请输入你的身份(你在QQ群的名称):")
-        self.administrator_list.append(self.user_name)  # 添加自己为超管
+        self.root_list.append(self.user_name)  # 添加自己为超管
         self.config["用户配置"]["user_name"] = self.user_name   # 录入Q群名
-        self.qq_administrator = input("请输入超级管理员名称(机器人默认超管，不输入则不设置):")
-        self.administrator_list.append(self.qq_administrator)   # 添加额外的超管
-        self.config["用户配置"]["qq_administrator"] = self.qq_administrator   # 录入超管
+        self.root = input("请输入超级管理员名称(机器人默认超管，不输入则不设置):")
+        self.root_list.append(self.root)   # 添加额外的超管
+        self.config["用户配置"]["root"] = self.root   # 录入超管
         # 录入入提示库里的所有txt文件
         roles = [name.replace(".txt", "") for name in os.listdir("提示库/") if name.endswith(".txt")]
         roles = "、".join(roles)  # 组合字符串
         print(f"提示库人设:{roles}")
         self.init_role = input(f"请输入自动回复的人设(在提示库中)，直接回车即不设置任何人设:")
         self.config["用户配置"]["init_role"] = self.init_role   # 录入取初始人设
+        if self.init_role == "": self.init_role = None  # 初始人设为空
         class_win_xy = input("请输入QQ窗口窗口的位置(直接回车默认最左上角[-579,2、-579,582、1919,-579、1919,2、1919,582]):")
         self.config["用户配置"]["window_location"] = class_win_xy   # 录入取窗口位置
         class_win_xy = class_win_xy.replace("，", ",")  # 转换，字符
@@ -79,6 +82,8 @@ class InitSettings:
         self.config["用户配置"]["configuration_exists_flag"] = "True"  # 修改配置标志位(下一次就不用输了)
         with open("UserSettings.ini", "w", encoding="utf-8") as ini_file:  # 保存修改的配置
             self.config.write(ini_file)
+        # # 再次读入配置文件内容(指定编码格式是utf-8，不然会乱码(默认GBK))
+        # self.config.read("./UserSettings.ini", encoding="utf-8")
 
     def configure_read(self, out = False):
         """配置读取
@@ -87,6 +92,7 @@ class InitSettings:
         # 读取用户名
         if self.config["用户配置"]["user_name"] != "":
             self.user_name = self.config["用户配置"]["user_name"]
+            self.root_list.append(self.user_name)   # 添加自己为超级管理员
             if out: print(f"\033[95m用户名:\033[96m{self.user_name}\033[0m")
         else:
             self.user_name = None
@@ -99,13 +105,12 @@ class InitSettings:
             self.qq_group_name = None
             print("\033[91m未设置QQ群的名称\033[0m")
         # 读超管来添加额外的超管
-        if self.config["用户配置"]["qq_administrator"] != "":
-            self.qq_administrator = self.config["用户配置"]["qq_administrator"]
-            self.administrator_list.append(self.user_name)   # 添加自己为超级管理员
-            self.administrator_list.append(self.qq_administrator)   # 额外添加超级管理员
-            if out: print(f"\033[95m当前超管:\033[96m{"、".join([name for name in self.administrator_list])}\033[0m")
+        if self.config["用户配置"]["root"] != "":
+            self.root = self.config["用户配置"]["root"]
+            self.root_list.append(self.root)   # 额外添加超级管理员
+            if out: print(f"\033[95m当前超管:\033[96m{"、".join([name for name in self.root_list])}\033[0m")
         else:
-            self.qq_administrator = None
+            self.root = None
             if out: print(f"\033[95m超管为自己\033[0m")
         # 读取初始人设
         if self.config["用户配置"]["init_role"] != "":
@@ -123,6 +128,7 @@ class InitSettings:
         else:
             self.win_x, self.win_y = None, None
             if out: print(f"\033[95m窗口左上角位置:\033[96m最左上角\033[0m")
+
 """---------------------------------------------------关闭程序启动动画-----------------------------------------------------"""
 try:
     import pyi_splash
@@ -133,6 +139,8 @@ except ImportError:
 init_setting = InitSettings()   # 实例化初始设置的类
 chat_win1 = QQMessageMonitor(init_setting.qq_group_name, init_setting.user_name)    # 会自动置顶和自动展示(最小化显示)
 deepseek = DeepseekConversationEngine(init_setting.init_role)  # 实例化对象
+# 初始化高级权限者列表(所有管理员包括超管理)
+advanced_permissions_list = init_setting.root_list.copy()   # 默认添加超管(自己以及额外添加的成员)
 """--------------------------------------------------QQ窗口绑定处理----------------------------------------------------"""
 chat_win1.move(init_setting.win_x, init_setting.win_y)          # 移动窗口
 print(f"\033[92m数据存放路径:  \033[96m{chat_win1.message_data_txt}\033[0m")
@@ -140,12 +148,31 @@ print("\033[92m-------------------开启AI自动回复-----------------\033[0m")
 for one_message in chat_win1.message_list:  # 打印初次绑定后监测的消息(这部分的消息不收录)
     print(one_message)
 """------------------------------------------------------快捷指令------------------------------------------------------"""
+def open_permission_isolation():
+    """开启权限隔离"""
+    init_setting.administrator_list.extend(chat_win1.get_qq_group_administrator())      # 添加Q群群主和管理员指令权限
+    init_setting.permission_isolation_flag = True    # 设置权限隔离标志为开启
+    global advanced_permissions_list
+    advanced_permissions_list = (set(init_setting.administrator_list) | set(advanced_permissions_list))    # 更新添加的管理员和超管
+    # print(advanced_permissions_list)
+    return True # 完成修改返回True
+def close_permission_isolation():
+    """关闭权限隔离"""
+    init_setting.administrator_list.extend(chat_win1.get_qq_group_administrator())      # 添加Q群群主和管理员指令权限
+    init_setting.permission_isolation_flag = False    # 设置权限隔离标志为关闭
+    global advanced_permissions_list
+    advanced_permissions_list = (set(init_setting.administrator_list) | set(advanced_permissions_list))  # 更新添加的管理员和超管
+    return True # 完成修改返回True
+
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
 args = None
 # 函数映射表(使用lambda来匿名函数)，直接把指点放到环境变量外，防止每次加载的时候都是
 function_map = {
     # QQ管理这类的专属指令
-    "#所有管理员": [True, lambda : "\n".join([qq_administrator_name for qq_administrator_name in chat_win1.get_qq_group_administrator()]),"无法查询"],
+    "#高级权限者" : [True, lambda : f"高级权限者:\n{"\n".join([i for i in advanced_permissions_list])}", "无法查询"],
+    "#开启权限隔离": [lambda : open_permission_isolation(), "已开启权限隔离功能(仅群主、管理员、超管能使用指令系统)", "开启权限隔离功能失败"],
+    "#关闭权限隔离": [lambda : close_permission_isolation(), "已关闭权限隔离功能(所有都能使用指令系统)", "关闭权限隔离功能失败"],
+    "#所有管理员": [True, lambda : f"{"\n".join(["主人:"+qq_administrator_name for qq_administrator_name in chat_win1.get_qq_group_administrator()])}","无法查询"],
     "#开启关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",True),"开启关键词自动回复","开启关键词自动回复"], # 这个返回None
     "#关闭关键词自动回复": [lambda : setattr(chat_win1,"keyword_respond",False),"关闭关键词自动回复","关闭关键词自动回复"], # 这个返回None
     # 特殊指令
@@ -259,11 +286,11 @@ def quick_order(order: str):
             execute_function(result)
     return True  # 存在指令且执行即返回True
 
-def exit_qq_auto_reply(administrator_name):
+def exit_qq_auto_reply(root_name):
     """判断是否退出QQ自动回复
     参数 ： administrator_name ： 超级管理员的名字
     """
-    if administrator_name in init_setting.administrator_list:
+    if root_name in init_setting.root_list:
         print("\033[31m已停止QQ监听回复和退出deepseek对话引擎\033[0m")
         chat_win1.send_message("已停止QQ自动回复\n已退出deepseek对话引擎")
         sys.exit()  # 优雅退出程序
@@ -273,7 +300,7 @@ def exit_qq_auto_reply(administrator_name):
 """-------------------------------------------------QQ消息回复处理-----------------------------------------------------"""
 # try:
 while True:
-    sleep(0.1)  # 每1秒监测一次变化
+    sleep(0.1)  # 每0.1秒监测一次变化
     chat_win1.show_win()    # 展示窗口
     chat_win1.top_win()     # 置顶开窗口
     chat_win1.monitor_message() # 始监控
@@ -289,12 +316,18 @@ while True:
         accept_time = chat_win1.message_processing_queues[0]["发送时间"]
         """===============快捷指令处理==========="""
         if "#" == accept_message[0]:   # 检测到指令的消息
+            # 检测是否开启权限隔离功能
+            if init_setting.permission_isolation_flag and sender not in advanced_permissions_list:    # 如果发送者在高级权限就不执行以下的指令
+                print(f"\033[94m接收了一条高级权限人员的指令，不执行该指令\033[0m")
+                chat_win1.send_message("权限不足，如要执行请联系管理员或超管")
+                chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
+                continue    # 跳过此次循环，不执行分割指令执行指令的操作
             if "#退出" in accept_message:      # 消息中存在退出指令
                 exit_qq_auto_reply(sender)     # 检查发送者的身份是否为管理员(内置优雅退出)
             else: quick_order(accept_message)    # 把指令带进入分析
             chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
             print(f"\033[94m已完成“{sender}”的指令\033[0m")
-        else:       # 非退出指令操作`
+        else:       # 非退出指令操作
             # deepseek.conversation_engine(content)  # 调用对话引擎
             reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
             print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)

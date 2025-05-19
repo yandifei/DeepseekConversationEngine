@@ -147,9 +147,9 @@ class QQMessageMonitor:
         self.sender_keyword = list()   # 发送者关键词.txt
         self.message_sender_keyword = dict()    # 指定发送者的关键词
         self.filter_sender_keyword = list()     # 过滤发送者关键词.txt
-        """关键词录入"""
-        # 发送者及其关键词内容读入
-        self.keyword_read() # 关键词读取
+        self.keyword_read() # 关键词读取(发送者及其关键词内容读入)
+        """-----------------------------------------权限管理相关相关-----------------------------------------"""
+        pass
 
     def parameter_validation(self):
         """创建对象时对输入的信息进行校验"""
@@ -221,8 +221,8 @@ class QQMessageMonitor:
         会该变self.group_or_friend属性
         """
         # 检查结构（不需要担心是QQ窗口，考虑qq群还是qq好友就行）
-        # obj.Refind()    # 刷新控件
-        # self.qq_chat_win = self.find_qq_chat_win(self.top_window_traversal())  # 重新强制刷新窗口
+        obj.Refind()    # 刷新控件
+        self.qq_chat_win = self.find_qq_chat_win(self.top_window_traversal())  # 重新强制刷新窗口
         # 尝试了这么多方法还是这个实在,确保窗口控件能被成功读取
         self.top_win()  # 重新置顶窗口
         if obj.GetChildren()[0].LocalizedControlType != "文档":
@@ -453,6 +453,8 @@ class QQMessageMonitor:
     #     """获取窗口标题并修改窗口标题"""
     #     print(self.edit_box.Name)
     #     self.edit_box.SetWindowText("1234")
+    """权限控制相关"""
+
 
     """消息窗口监听相关"""
     @staticmethod
