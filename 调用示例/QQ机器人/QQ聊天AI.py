@@ -27,8 +27,11 @@ class InitSettings:
         # 初次读入配置文件内容(指定编码格式是utf-8，不然会乱码(默认GBK))
         self.config.read("./UserSettings.ini", encoding="utf-8")
         self.print_notice()  # 输出声明
+        self.password = input("请设置密码(开启权限隔离时使用):")
+        self.super_password = input("请设置退出密码:")
         self.loading_settings()     # 加载配置
         self.permission_isolation_flag = False  # 设置权限隔离标志,默认不隔离
+
 
     def loading_settings(self):
         """加载用户配置"""
@@ -307,6 +310,7 @@ def exit_qq_auto_reply(root_name):
     参数 ： administrator_name ： 超级管理员的名字
     """
     if root_name in init_setting.root_list:
+
         print("\033[31m已停止QQ监听回复和退出deepseek对话引擎\033[0m")
         chat_win1.send_message("已停止QQ自动回复\n已退出deepseek对话引擎")
         sys.exit()  # 优雅退出程序
@@ -335,22 +339,30 @@ while True:
             # 检查是否为无限制指令
             if accept_message in unlimited_command:
                 quick_order(accept_message)  # 把无限制指令带进入分析
-                chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
                 print(f"\033[94m已完成“{sender}”对无限制指令的处理\033[0m")
             # 检测是否开启权限隔离功能
             elif init_setting.permission_isolation_flag and sender not in advanced_permissions_list:    # 如果发送者在高级权限就不执行以下的指令
-                print(f"\033[94m接收了一条高级权限人员的指令，不执行该指令\033[0m")
-                chat_win1.send_message("权限不足，如要执行请联系管理员或超管")
-                chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
-                continue    # 跳过此次循环，不执行分割指令执行指令的操作
-            elif "#退出" in accept_message:  # 消息中存在退出指令(这里不用判断身份)
-                print(init_setting.root_list)
+                if ":" not in accept_message:
+                    chat_win1.send_message("此为高级操作请附带高级操作的密码(使用后立即销毁密码，注意邮箱查收新的密码)")
+                    chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
+                    continue  # 跳过此次循环，不执行分割指令执行指令的操作
+                elif not accept_message.split(":",1)[0]:  # 参数为空
+                    chat_win1.send_message("密码不能为空")
+                    chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
+                    continue  # 跳过此次循环，不执行分割指令执行指令的操作
+                password = accept_message.split(":",1)[1]
+                if password != init_setting.password:
+                    print(f"\033[94m接收了一条高级权限人员的指令，不执行该指令\033[0m")
+                    chat_win1.send_message("权限不足或密码错误，如要执行请联系管理员或超管")
+                    chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
+                    continue    # 跳过此次循环，不执行分割指令执行指令的操作
+            elif "#退出" in accept_message and sender in init_setting.root_list:  # 消息中存在退出指令(这里2次判断身份)
                 exit_qq_auto_reply(sender)  # 检查发送者的身份是否为管理员(内置优雅退出)
-                chat_win1.message_processing_queues.pop(0)  # 如果没有退出就必须清理收到的指令(出队)
+                chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
             else:
                 quick_order(accept_message)    # 把指令带进入分析
-                chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
                 print(f"\033[94m已完成“{sender}”的指令\033[0m")
+                chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
         else:       # 非退出指令操作
             reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
             print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)
