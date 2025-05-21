@@ -8,7 +8,8 @@ import configparser
 from QQMessageMonitor import * # 导包
 from deepseek_conversation_engine import DeepseekConversationEngine
 """--------------------------------------------------QQ聊天AI初始化-----------------------------------------------------"""
-uiautomation.SetClipboardText("") # 设置剪切板内容为空避免出现问题(第一次粘贴可能导致大量的文本出现)
+# 这个问题已经放到异常捕获里面解决了，这里也没有必要搞这个了，而且还会带来麻烦
+# uiautomation.SetClipboardText("") # 设置剪切板内容为空避免出现问题(第一次粘贴可能导致大量的文本出现)
 # 创建类对象来管理初始化和配置保存（没办法，内容太多了，这里仅仅时简单管理）
 class InitSettings:
     def __init__(self):

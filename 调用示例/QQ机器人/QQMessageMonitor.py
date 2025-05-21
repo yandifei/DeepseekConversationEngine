@@ -363,7 +363,7 @@ class QQMessageMonitor:
         返回值：返回剪切的内容
         """
         # 获取剪切板内容
-        clipboard_content = self.tkinter .clipboard_get()
+        clipboard_content = self.tkinter.clipboard_get()
         if out: print("剪切板内容:", clipboard_content)
         return clipboard_content
 
@@ -417,12 +417,10 @@ class QQMessageMonitor:
             uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
         except Exception as e:
             print(f"\033[91m出现异常错误:{e},粘贴处发生异常，强制推送启动\033[91m")  # 设置剪切板内容出现异常
-            # 捕获异常后重新发送
-            temp = self.tkinter.clipboard_get()  # 获得剪切板的内容
+            # 捕获异常后重新发送（出现异常一般都是剪切板没有内容）
             uiautomation.SetClipboardText(text)  # 设置剪切板内容
             self.edit_box.SetFocus()  # 设置焦点
             self.edit_box.SendKeys("{ctrl}v")
-            uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
         """后台点击发送按钮"""
         # 获取发送按钮中心x和y的绝对坐标
         screen_x, screen_y = self.send_button.BoundingRectangle.xcenter(), self.send_button.BoundingRectangle.ycenter()
