@@ -165,11 +165,26 @@ def close_permission_isolation():
     advanced_permissions_list = (set(init_setting.administrator_list) | set(advanced_permissions_list))  # 更新添加的管理员和超管
     return True # 完成修改返回True
 
+# 无限制指令,放置不需要任何权限的指令(任何人都能用，即使开启了权限隔离)（初始化仅仅只是初始化对话引擎，不会初始化权限相关）
+unlimited_command = ["#帮助", "#指令查询","#高级权限者","#所有管理员",
+                     "#兼容", "#测试接口", "#初始化", "#模型切换", "#V3模型", "#R1模型", "#评分", "#最大token数",
+                     "#温度", "#核采样","#FIM对话","#FIM补全开头","#FIM完整输出","#FIM补全后缀","#思维链","#清空对话历史",
+                     "#代码", "#数学", "#数据", "#分析", "#对话""#翻译", "#创作", "#写作", "#作诗", "#余额", "#token"]
+def help_notice():
+    """帮助指令
+    返回值：text
+    """
+    text = "\n".join([init_setting.config["软件声明"][declaration] for declaration in init_setting.config["软件声明"]]) + \
+        f"\n\n如果要查看可使用的指令，请使用 #指令查询。注：普通成员可以开启权限隔离功能，但是开启后无权关闭"
+    return text
+
 # 用来放置参数(必须存在,需要用来判断是否需要参数)
 args = None
 # 函数映射表(使用lambda来匿名函数)，直接把指点放到环境变量外，防止每次加载的时候都是
 function_map = {
     # QQ管理这类的专属指令
+    "#帮助": [True, lambda : help_notice(), "发送失败"],
+    "#指令查询": [True, lambda : "所有指令\n" + "\n".join(name for name in function_map.keys()), "查询失败"],
     "#高级权限者" : [True, lambda : f"高级权限者:\n{"\n".join([i for i in advanced_permissions_list])}", "无法查询"],
     "#开启权限隔离": [lambda : open_permission_isolation(), "已开启权限隔离功能(仅群主、管理员、超管能使用指令系统)", "开启权限隔离功能失败"],
     "#关闭权限隔离": [lambda : close_permission_isolation(), "已关闭权限隔离功能(所有都能使用指令系统)", "关闭权限隔离功能失败"],
@@ -317,19 +332,26 @@ while True:
         accept_time = chat_win1.message_processing_queues[0]["发送时间"]
         """===============快捷指令处理==========="""
         if "#" == accept_message[0]:   # 检测到指令的消息
+            # 检查是否为无限制指令
+            if accept_message in unlimited_command:
+                quick_order(accept_message)  # 把无限制指令带进入分析
+                chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
+                print(f"\033[94m已完成“{sender}”对无限制指令的处理\033[0m")
             # 检测是否开启权限隔离功能
-            if init_setting.permission_isolation_flag and sender not in advanced_permissions_list:    # 如果发送者在高级权限就不执行以下的指令
+            elif init_setting.permission_isolation_flag and sender not in advanced_permissions_list:    # 如果发送者在高级权限就不执行以下的指令
                 print(f"\033[94m接收了一条高级权限人员的指令，不执行该指令\033[0m")
                 chat_win1.send_message("权限不足，如要执行请联系管理员或超管")
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)
                 continue    # 跳过此次循环，不执行分割指令执行指令的操作
-            if "#退出" in accept_message:      # 消息中存在退出指令
-                exit_qq_auto_reply(sender)     # 检查发送者的身份是否为管理员(内置优雅退出)
-            else: quick_order(accept_message)    # 把指令带进入分析
-            chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
-            print(f"\033[94m已完成“{sender}”的指令\033[0m")
+            elif "#退出" in accept_message:  # 消息中存在退出指令(这里不用判断身份)
+                print(init_setting.root_list)
+                exit_qq_auto_reply(sender)  # 检查发送者的身份是否为管理员(内置优雅退出)
+                chat_win1.message_processing_queues.pop(0)  # 如果没有退出就必须清理收到的指令(出队)
+            else:
+                quick_order(accept_message)    # 把指令带进入分析
+                chat_win1.message_processing_queues.pop(0)  # 清理收到的指令(出队)
+                print(f"\033[94m已完成“{sender}”的指令\033[0m")
         else:       # 非退出指令操作
-            # deepseek.conversation_engine(content)  # 调用对话引擎
             reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
             print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)
             if sender == "系统":      # 如果是系统发送就不@了
