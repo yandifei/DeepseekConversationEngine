@@ -373,9 +373,11 @@ def exit_qq_auto_reply(root_name, message):
 """-------------------------------------------------QQ消息回复处理-----------------------------------------------------"""
 # try:
 while True:
-    sleep(0.1)  # 每0.1秒监测一次变化
+    # sleep(0.1)  # 每0.1秒监测一次变化(去掉监控时间)
     chat_win1.show_win()    # 展示窗口
     chat_win1.top_win()     # 置顶开窗口
+    chat_win1.move(init_setting.win_x, init_setting.win_y)  # 移动窗口
+    chat_win1.keep_size()    # 保持窗口大小
     chat_win1.monitor_message() # 始监控
     """消息处理"""
     if len(chat_win1.message_processing_queues) > 0:    # 队列不为空，进行队列处理

@@ -39,8 +39,8 @@ class QQMessageMonitor:
         self.geometry = self.qq_chat_win.BoundingRectangle  # 窗口的位置和大小
         self.x = self.geometry.left # 窗口x坐标
         self.y = self.geometry.top # 窗口y坐标
-        self.weight = self.geometry.width # 窗口长
-        self.height = self.geometry.height # 窗口宽
+        self.weight = self.geometry.width() # 窗口长
+        self.height = self.geometry.height() # 窗口宽
         print(f"成功绑定 \033[96m{win_name}\033[0m {self.jude_group_or_friend(self.qq_chat_win)}窗口并置顶窗口\t监听者：{monitor_name}")# 把对象进行绑定，动态属性修改并打印
         print(f"\033[96m{win_name}\033[0m 窗口句柄:{self.qq_chat_hwnd}\t进程ID:{self.pid}\t窗口大小:{self.geometry}")
         """------------------------------------------聊天窗口控制监控相关---------------------------------------------"""
@@ -247,8 +247,8 @@ class QQMessageMonitor:
         repaint : 重新绘制窗口，默认打开
         """
         if x == y is None:  # 把窗口移动到指定位置
-            x = 3 - self.weight()
-            y = 3 - self.height()
+            x = 3 - self.weight
+            y = 3 - self.height
         size = win32gui.GetWindowRect(self.qq_chat_hwnd)  # 获取窗口左上角和右下角的坐标
         width, height = size[2] - size[0], size[3] - size[1]    # 计算窗口的大小
         win32gui.MoveWindow(self.qq_chat_hwnd, x, y, width, height, repaint)
@@ -265,6 +265,13 @@ class QQMessageMonitor:
         """
         point = win32gui.GetWindowRect(self.qq_chat_hwnd)  # 获取窗口左上角和右下角的坐标
         win32gui.MoveWindow(self.qq_chat_hwnd, point[0], point[1], width, height, repaint)
+
+    def keep_size(self, repaint=True):
+        """保持窗口最开始属性的大小
+        repaint : 重新绘制窗口，默认打开
+        """
+        point = win32gui.GetWindowRect(self.qq_chat_hwnd)  # 获取窗口左上角和右下角的坐标
+        win32gui.MoveWindow(self.qq_chat_hwnd, point[0], point[1], self.weight, self.height, repaint)
 
     def top_win(self):
         """将qq聊天窗口置顶"""
