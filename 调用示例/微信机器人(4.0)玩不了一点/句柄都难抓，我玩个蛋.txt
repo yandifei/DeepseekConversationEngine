@@ -1,0 +1,10 @@
+类名
+窗口叫"Weixin"
+前台叫"微信"
+
+一堆功能不支持
+一堆bug 
+置顶功能他还没写，我还得给他实现，真服了
+
+
+3.9版本下载地址：https://dldir1v6.qq.com/weixin/Windows/WeChatSetup.exe
