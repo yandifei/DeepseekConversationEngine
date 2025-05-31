@@ -1,3 +1,3 @@
-a = 0
-if a:
-    print(1)
+a = [1,2,3]
+for i in a[0:-3]:
+    print(i)
