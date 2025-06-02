@@ -27,11 +27,11 @@ class WeChatBackgroundOperation:
         self.init_min_win = init_min_win # 最小化窗口标志位
         self.get_wc_win(wc_name, wc_id)     # 使用方法绑定窗口并录入属性(获得当前微信或从多开的微信中找到指定的微信)
         """标题栏(title_bar)[窗口控制按钮]"""
-        # 微信-最后控件-控件0-控件0-最后控件-控件1(工具栏)[里面的子控件就是窗口控制按钮了]
-        # self.top_button = self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetLastChildControl().GetChildren()[0].GetFirstChildControl()  # 置顶（复合按钮）按钮
-        # self.min_button = self.top_button.GetNextSiblingControl()  # 最小化按钮
-        # self.max_button = self.min_button.GetNextSiblingControl()  # 最大化按钮
-        # self.close_button = self.max_button.GetNextSiblingControl()  # 关闭按钮
+        # 微信-最后控件-控件0-最后控件-最后控件(工具栏)[里面的子控件就是窗口控制按钮了]
+        self.top_button = self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[-1].GetChildren()[-1].GetFirstChildControl()  # 置顶（复合按钮）按钮
+        self.min_button = self.top_button.GetNextSiblingControl()  # 最小化按钮
+        self.max_button = self.min_button.GetNextSiblingControl()  # 最大化按钮
+        self.close_button = self.max_button.GetNextSiblingControl()  # 关闭按钮
         """导航栏(按钮多少可变)"""
         # 微信-最后一格控件-1控件-导航(子控件就是导航栏的按钮了)[这里直接拿所有子控件]
         self.navigation_bar =  self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren() # 导航栏
@@ -345,23 +345,7 @@ class WeChatBackgroundOperation:
 if __name__ == '__main__':
     wc = WeChatBackgroundOperation("","", False)
     print(f"实验微信名：{wc.wc_name}\n实验微信ID：{wc.wc_id}\n实验微信地区：{wc.wc_area}")
-    print(f"聊天是否有新消息：{"有" if wc.is_new_messages() else "无"}")
-    print(f"通讯录是否新消息：{"有" if wc.is_new_friend() else "无"}")
-    print(f"收藏是否有新消息：{"有" if wc.is_new_favorites() else "无"}")
-    print(f"聊天文件是否有新消息：{"有" if wc.is_new_chat_files() else "无"}")
-    print(f"朋友圈是否有新消息：{"有" if wc.is_new_moments() else "无"}")
-    print(f"视频号是否有新消息：{"有" if wc.is_new_channels() else "无"}")
-    print(f"看一看是否有新消息：{"有" if wc.is_new_news() else "无"}")
-    print(f"搜一搜是否有新消息：{"有" if wc.is_new_search() else "无"}")
-    print(f"小程序面板是否有新消息：{"有" if wc.is_new_mini_programs() else "无"}")
-    print(f"手机(文件传输)是否有新消息：{"有" if wc.is_new_file_transfer() else "无"}")
-    print(f"设置是否有新消息：{"有" if wc.is_new_settings() else "无"}")
 
-    # 判断受否有新的聊天消息
-    if wc.is_new_messages():    # 有新的聊天消息
-        print("有未读的聊天消息")
-    else:       # 没有新的聊天消息
-        print("没有需要处理的聊天消息")
 
 
 
