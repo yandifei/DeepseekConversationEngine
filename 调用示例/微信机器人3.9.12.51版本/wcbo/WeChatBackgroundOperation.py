@@ -11,11 +11,12 @@ import win32con
 
 class WeChatBackgroundOperation:
     """微信后台操作类"""
-    def __init__(self, wc_name = None, wc_id = None):
+    def __init__(self, wc_name = None, wc_id = None, init_min_win = True):
         """初始化类
         参数：
         wc_name ： 微信名，默认None(仅在控制多个微信时需要填写)
         wc_id : 微信号，默认None(仅在控制多个微信时需要填写)
+        init_min_win : 默认True初始化时最小化窗口(为了方便开发可以改为False)
         """
         """初始化属性定义"""
         self.wc_name = None     # 用户微信名
@@ -23,6 +24,7 @@ class WeChatBackgroundOperation:
         self.wc_area = None     # 用户微信地区
         self.hwnd = None        # 窗口句柄
         self.wc_win : uiautomation.Control = None      # 窗口控件对象
+        self.init_min_win = init_min_win # 最小化窗口标志位
         self.get_wc_win(wc_name, wc_id)     # 使用方法绑定窗口并录入属性(获得当前微信或从多开的微信中找到指定的微信)
         """标题栏(title_bar)[窗口控制按钮]"""
         # 微信-最后控件-控件0-控件0-最后控件-控件1(工具栏)[里面的子控件就是窗口控制按钮了]
@@ -33,23 +35,23 @@ class WeChatBackgroundOperation:
         """导航栏(按钮多少可变)"""
         # 微信-最后一格控件-1控件-导航(子控件就是导航栏的按钮了)[这里直接拿所有子控件]
         self.navigation_bar =  self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren() # 导航栏
-        # 遍历固定控件
-        self.avatar_button = self.navigation_bar[0]               # 头像按钮
-        self.Chats = self.navigation_bar[1]                 # 聊天按钮
-        self.Contacts = self.navigation_bar[2]             # 通讯录按钮
-        self.Favorites = self.navigation_bar[3]              # 收藏按钮
-        self.File_Transfer = self.navigation_bar[4]           # 聊天文件按钮
-        self.Mini_Programs = self.navigation_bar[-3]  # 小程序面板
-        self.Phone = self.navigation_bar[-2]               # 手机
-        self.Settings = self.navigation_bar[-1] # 设置及其他
-        # 遍历额外控件
-        self.Moments : uiautomation.Control = None   # 朋友圈按钮
-        self.Channels : uiautomation.Control = None     # "视频号"
-        self.Search : uiautomation.Control = None     # "搜一搜"
-        self.News : uiautomation.Control = None # "看一看"
+        # 固定控件
+        self.avatar_button = self.navigation_bar[0]                                 # 头像按钮
+        self.chats_button = self.navigation_bar[1]                                  # 聊天按钮
+        self.contacts_button = self.navigation_bar[2]                               # 通讯录按钮
+        self.favorites_button = self.navigation_bar[3]                              # 收藏按钮
+        self.chat_files_button = self.navigation_bar[4]                             # 聊天文件按钮
+        self.mini_programs_button = self.navigation_bar[-3].GetFirstChildControl()  # 小程序面板
+        self.file_transfer_button = self.navigation_bar[-2].GetFirstChildControl()  # 手机(文件传输)
+        self.settings_button = self.navigation_bar[-1].GetFirstChildControl()       # 设置及其他
+        # 额外控件
+        self.moments_button : uiautomation.Control = None                # 朋友圈按钮
+        self.channels_button : uiautomation.Control = None     # "视频号"
+        self.search_button : uiautomation.Control = None     # "搜一搜"
+        self.news_button : uiautomation.Control = None # "看一看"
+        # 调用方法获得额外的控件
+        self.toolbar_button()   # 遍历导航栏额外的控件
         """初始化调用的方法"""
-
-
 
     """属性初始化的相关方法"""
     @staticmethod
@@ -77,6 +79,7 @@ class WeChatBackgroundOperation:
         参数：
         wc_name ： 微信名(默认None)，仅在多开微信时才能用上
         wc_id : 微信号，默认None(仅在控制多个微信时需要填写)
+        min_win : 是否最小化窗口,默认True，为了调试可以设置为False
         返回值： 微信窗口对象
         """
         all_wc_win = list() # 存放所有微信窗口
@@ -92,7 +95,8 @@ class WeChatBackgroundOperation:
             raise EnvironmentError("请检查是否已经登录并打开微信了")
         elif len(all_wc_win) == 1:   # 仅仅有一个微信代表仅仅开了一个微信
             self.hwnd, self.wc_win = all_wc_win[0].NativeWindowHandle, all_wc_win[0]  # 录入窗口对象（这个必须在前）
-            self.wc_name, self.wc_id, self.wc_area = self.get_user_info(True)  # 录入用户属性
+            if self.init_min_win: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)  # 是否调用win的api最小化窗口
+            self.wc_name, self.wc_id, self.wc_area = self.get_user_info()  # 录入用户属性
             return all_wc_win[0]  # 拿到微信窗口后返回
         elif len(all_wc_win) >= 2:   # 多个微信窗口
             if not wc_name:     # 微信名为空或没填就触发警告(以下需要用到微信名)
@@ -105,14 +109,16 @@ class WeChatBackgroundOperation:
                 raise EnvironmentError(f"没有找到微信名：{wc_name} 的微信窗口，请检查是否已经登录并打开此微信")
             elif len(homonymous_wc_win) == 1:     # 同名窗口列表为1 代表没有其他同名窗口
                 self.hwnd, self.wc_win = homonymous_wc_win[0].NativeWindowHandle, homonymous_wc_win[0] # 录入非同名窗口对象（这个必须在前）
-                self.wc_name, self.wc_id, self.wc_area = self.get_user_info(True)   # 录入用户属性
+                if self.init_min_win: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)  # 是否调用win的api最小化窗口
+                self.wc_name, self.wc_id, self.wc_area = self.get_user_info()   # 录入用户属性
                 return all_wc_win[0]  # 拿到微信窗口后返回
             elif len(homonymous_wc_win) >= 2:   # 有2个微信名相同的微信窗口
                 if not wc_id:       # 检测微信号是否填写
                     raise ValueError("请填写微信号，检测到微信多开且有同名需要微信号进行判断")
                 for wc_win in homonymous_wc_win:    # 从同微信名的微信窗口中找
                     self.hwnd, self.wc_win = wc_win.NativeWindowHandle, wc_win    # 窗口属性临时传入可疑窗口控件对象(为了下面的方法调用)
-                    self.wc_name, self.wc_id, self.wc_area = self.get_user_info(True)  # 获得用户信息(最小化窗口)
+                    if self.init_min_win: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)  # 是否调用win的api最小化窗口
+                    self.wc_name, self.wc_id, self.wc_area = self.get_user_info()  # 获得用户信息(最小化窗口)
                     if wc_id == self.wc_id: # 调用方法拿到微信号进行对比
                         return wc_win
                 raise EnvironmentError(f"请检查微信号是否填写正确，没有找到微信号对得上的窗口，")
@@ -139,23 +145,32 @@ class WeChatBackgroundOperation:
         for control in self.navigation_bar[5:-3]:    # 遍历导航栏控件孩子(跳过前5[第6个开始]和后3控件按钮，因为是固定按钮)
             # 不用担心没有控件导致溢出，没有控件直接不执行for
             find_deepest_child(control) # 导航栏的控件扔进递归函数里面解析
-        print(toolbar_button_dict)
-
+        # 控件超出基础范围需要最大化拿到所有控件
         if "更多功能" in toolbar_button_dict:       # 解析出了更多按钮这个控件
             self.max_win(self.hwnd)  # 最大化窗口
             self.min_win(self.hwnd) #  最小化窗口
+            toolbar_button_dict.clear() # 清空字典(必须清空，之前的控件录入已经改变了，尤其是更多功能按钮)
+            # 重新遍历导航栏的控件
+            for control in self.navigation_bar[5:-3]:
+                find_deepest_child(control)  # 导航栏的控件扔进递归函数里面解析
+        # print(toolbar_button_dict)  # 打印导航栏额外的控件
+        if "朋友圈" in toolbar_button_dict:
+            self.moments_button = toolbar_button_dict["朋友圈"]  # 朋友圈按钮
+        if "视频号" in toolbar_button_dict:
+            self.channels_button = toolbar_button_dict["视频号"]  # "视频号"
+        if "看一看" in toolbar_button_dict:
+            self.news_button = toolbar_button_dict["看一看"]  # "看一看"
+        if "搜一搜" in toolbar_button_dict:
+                self.search_button = toolbar_button_dict["搜一搜"]  # "搜一搜"
 
-
-
-    def get_user_info(self, hide = False):
+    def get_user_info(self):
         """获得用户信息(最小化窗口)
-        参数： hide ： 是否最小化窗口
+        参数：
         返回值：
         wc_name ； 微信名
         wc_id ： 微信号
         wc_area ： 地区名
         """
-        if hide: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)    # 调用win的api最小化窗口
         # 微信-最后一格控件-1控件-导航-1控件(头像按钮avatar_button)
         self.back_click(self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren()[0])  # 后台点击头像这个按钮
         avatar_win = self.wc_win.GetFirstChildControl() # 获得微信下的第一个窗口(小窗口有的的时候这个就有效)
@@ -267,21 +282,94 @@ class WeChatBackgroundOperation:
         """判断是否有新的消息(不仅仅是群和好友的消息，如果开启了消息免打扰则无法获取)
         返回值 ： 如果有消息则返回True，否则返回False
         """
-        return bool(self.Chats.GetLegacyIAccessiblePattern().Value)  # LegacyIAccessible.Value
+        return bool(self.chats_button.GetLegacyIAccessiblePattern().Value)  # LegacyIAccessible.Value
 
     def is_new_friend(self):
-        """判断通讯录是否有新消息(新好友)"""
-        return bool(self.Contacts.GetLegacyIAccessiblePattern().Value)
+        """判断通讯录是否有新消息(新好友)
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.contacts_button.GetLegacyIAccessiblePattern().Value)
 
-    def is_friends_circle(self):
+    def is_new_favorites(self):
+        """收藏是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.favorites_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_chat_files(self):
+        """聊天文件是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.chat_files_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_moments(self):
         """朋友圈是否有新的消息"""
-        return bool(self.Moments.GetLegacyIAccessiblePattern().Value)
+        return bool(self.moments_button.GetLegacyIAccessiblePattern().Value)
 
+    def is_new_channels(self):
+        """视频号是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.channels_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_news(self):
+        """看一看是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.news_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_search(self):
+        """搜一搜是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.search_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_mini_programs(self):
+        """小程序面板是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.mini_programs_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_file_transfer(self):
+        """手机(文件传输)是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.file_transfer_button.GetLegacyIAccessiblePattern().Value)
+
+    def is_new_settings(self):
+        """设置及其他是否有新的消息
+        返回值 ： 如果有消息则返回True，否则返回False
+        """
+        return bool(self.settings_button.GetLegacyIAccessiblePattern().Value)
 
 if __name__ == '__main__':
-    wc = WeChatBackgroundOperation("","")
+    wc = WeChatBackgroundOperation("","", False)
     print(f"实验微信名：{wc.wc_name}\n实验微信ID：{wc.wc_id}\n实验微信地区：{wc.wc_area}")
-    print(f"是否有新消息：{"有" if wc.is_new_messages() else "无"}")
-    print(f"是否有新朋友：{"有" if wc.is_new_friend() else "无"}")
-    # wc.back_click(wc.top_button)
-    wc.toolbar_button()
+    print(f"聊天是否有新消息：{"有" if wc.is_new_messages() else "无"}")
+    print(f"通讯录是否新消息：{"有" if wc.is_new_friend() else "无"}")
+    print(f"收藏是否有新消息：{"有" if wc.is_new_favorites() else "无"}")
+    print(f"聊天文件是否有新消息：{"有" if wc.is_new_chat_files() else "无"}")
+    print(f"朋友圈是否有新消息：{"有" if wc.is_new_moments() else "无"}")
+    print(f"视频号是否有新消息：{"有" if wc.is_new_channels() else "无"}")
+    print(f"看一看是否有新消息：{"有" if wc.is_new_news() else "无"}")
+    print(f"搜一搜是否有新消息：{"有" if wc.is_new_search() else "无"}")
+    print(f"小程序面板是否有新消息：{"有" if wc.is_new_mini_programs() else "无"}")
+    print(f"手机(文件传输)是否有新消息：{"有" if wc.is_new_file_transfer() else "无"}")
+    print(f"设置是否有新消息：{"有" if wc.is_new_settings() else "无"}")
+
+    # 判断受否有新的聊天消息
+    if wc.is_new_messages():    # 有新的聊天消息
+        print("有未读的聊天消息")
+    else:       # 没有新的聊天消息
+        print("没有需要处理的聊天消息")
+
+
+
+
+
+
+
+
+
+
+
