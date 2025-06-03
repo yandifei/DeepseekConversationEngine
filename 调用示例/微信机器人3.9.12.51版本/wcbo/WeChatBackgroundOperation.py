@@ -148,7 +148,7 @@ class WeChatBackgroundOperation:
         # 控件超出基础范围需要最大化拿到所有控件
         if "更多功能" in toolbar_button_dict:       # 解析出了更多按钮这个控件
             self.max_win(self.hwnd)  # 最大化窗口
-            self.min_win(self.hwnd) #  最小化窗口
+            if self.init_min_win: self.min_win(self.hwnd) #  最小化窗口(根据属性判断是否开启这个功能)
             toolbar_button_dict.clear() # 清空字典(必须清空，之前的控件录入已经改变了，尤其是更多功能按钮)
             # 重新遍历导航栏的控件
             for control in self.navigation_bar[5:-3]:
@@ -214,6 +214,29 @@ class WeChatBackgroundOperation:
         win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, long_position)
         # 模拟鼠标弹起(窗口句柄和客户端坐标)
         win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, long_position)
+
+    def back_wheel(self, control, scroll_times = 1, direction = "down"):
+        """后台滚轮（ 120 是标准滚动单位）
+        参数:
+        control：控件对象
+        scroll_times ： 滚动次数(默认为1)
+        direction ： 滚动方向(默认为"down",向下)
+        """
+        # 获取控件中心x和y的绝对坐标
+        screen_x, screen_y = control.BoundingRectangle.xcenter(), control.BoundingRectangle.ycenter()
+        # 把屏幕坐标转换为客户端坐标（应用窗口的坐标）
+        client_x, client_y = win32gui.ScreenToClient(self.hwnd, (screen_x, screen_y))
+        # 计算向下滚动量 (WHEEL_DELTA = 120 是标准滚动单位)
+        scroll_amount = -scroll_times * win32con.WHEEL_DELTA
+        # 坐标转换，16位的整数（通常是坐标值）合并成一个32位的长整型值
+        long_position = win32api.MAKELONG(client_x, client_y)
+        # 构造wParam (高位字是滚动量，低位字是虚拟键状态)
+        if not direction.lower():   # 如果参数不是down(不区分大小写)
+            scroll_amount = -scroll_amount  # 添加负号反转为正数
+        keyboard_key = (scroll_amount << 16) | 0  # 0表示无按键（这个就是按住某个按键）
+        control.SetFocus()  # 设置焦点(如果不设置焦点窗口就不接收消息)
+        # 给窗口发送滚轮消息
+        win32gui.SendMessage(self.hwnd, win32con.WM_MOUSEWHEEL, keyboard_key, long_position)
 
     @staticmethod
     def max_win(hwnd):
