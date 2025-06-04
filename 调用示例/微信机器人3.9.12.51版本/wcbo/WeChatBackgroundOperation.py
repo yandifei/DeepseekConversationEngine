@@ -23,7 +23,7 @@ class WeChatBackgroundOperation:
         self.wc_id = None       # 用户微信号
         self.wc_area = None     # 用户微信地区
         self.hwnd = None        # 窗口句柄
-        self.wc_win : uiautomation.Control = None      # 窗口控件对象
+        self.wc_win : uiautomation.WindowControl = None      # 窗口控件对象
         self.init_min_win = init_min_win # 最小化窗口标志位
         self.get_wc_win(wc_name, wc_id)     # 使用方法绑定窗口并录入属性(获得当前微信或从多开的微信中找到指定的微信)
         """标题栏(title_bar)[窗口控制按钮]"""
@@ -52,6 +52,7 @@ class WeChatBackgroundOperation:
         # 调用方法获得额外的控件
         self.toolbar_button()   # 遍历导航栏额外的控件
         """初始化调用的方法"""
+
 
     """属性初始化的相关方法"""
     @staticmethod
@@ -215,6 +216,61 @@ class WeChatBackgroundOperation:
         # 模拟鼠标弹起(窗口句柄和客户端坐标)
         win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, long_position)
 
+    @staticmethod
+    def is_wheel(control):
+        """判断控件是否支持滚动和滚动是否能用
+        control：控件对象
+        返回值 ：
+        """
+        # 50008是滚动控件
+        if control.ControlType != 50008 or not control.GetScrollPattern():
+            print("控件不支持滚动模式")
+            return False
+        # 获得滚动接口
+        scroll_pattern = control.GetScrollPattern()
+        if not scroll_pattern.VerticallyScrollable and not scroll_pattern.HorizontallyScrollable:
+            print("垂直滚动和纵向滚动不可用")
+            return False
+        # 检查垂直滚动是否可用
+        if scroll_pattern.VerticallyScrollable:
+            print("垂直滚动可用")
+        # 检查纵向滚动是否可用
+        if scroll_pattern.HorizontallyScrollable:
+            print("纵向滚动可用")
+        return True
+
+    @staticmethod
+    def wheel(control, wheel_time=0.01, direction = "down"):
+        """列表滚动
+        control：控件对象
+        wheel_time ： 滚动时间(默认滚动0.01秒)
+        direction ： 滚动反向(默认为"down"，向下)，不区分大小写
+        """
+        if direction == "down".lower():
+            control.WheelDown(waitTime=wheel_time)
+        else:
+            control.WheelUp(waitTime=wheel_time)
+
+    @staticmethod
+    def percent_wheel(control, horizontal_percent = -1, vertical_percent = -1):
+        """列表百分比滚动（必须要确保控件支持滚动和滚动可用）-1代表不动
+        control：控件对象
+        horizontal_percent : 横向百分比
+        vertical_percent : 纵向百分比
+        """
+        # WheelUp
+        scroll_pattern = control.GetScrollPattern()
+        # 获取当前滚动位置(根据实际情况获取当前百分比位置)
+        current_horizontal = scroll_pattern.VerticalScrollPercent if scroll_pattern.VerticallyScrollable else 0
+        current_vertical =  scroll_pattern.HorizontallyScrollable if scroll_pattern.HorizontallyScrollable else 0
+        # 计算新位置（限制在0-100 范围）
+        horizontal = max(0, min(100, current_horizontal + horizontal_percent))
+        vertical = max(0, min(100, current_vertical + vertical_percent))
+        # 从当前百分比开始位移
+        control.GetScrollPattern().SetScrollPercent(horizontal, vertical)
+        pass
+
+
     def back_wheel(self, control, scroll_times = 1, direction = "down"):
         """后台滚轮（ 120 是标准滚动单位）
         参数:
@@ -237,13 +293,19 @@ class WeChatBackgroundOperation:
         control.SetFocus()  # 设置焦点(如果不设置焦点窗口就不接收消息)
         # 给窗口发送滚轮消息
         win32gui.SendMessage(self.hwnd, win32con.WM_MOUSEWHEEL, keyboard_key, long_position)
+        pass    # 后面修
 
     @staticmethod
-    def max_win(hwnd):
-        """最大化窗口
-        参数：hwnd ： 需要关闭的窗口的句柄
+    def top_win(hwnd):
+        """将窗口置顶
+        hwnd ： 窗口的句柄
         """
-        win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+        win32gui.SetWindowPos(
+            hwnd,
+            win32con.HWND_TOPMOST,  # 置顶层
+            0, 0, 0, 0,
+            win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
+        )
 
     @staticmethod
     def min_win(hwnd):
@@ -251,6 +313,13 @@ class WeChatBackgroundOperation:
         参数：hwnd ： 需要关闭的窗口的句柄
         """
         win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+
+    @staticmethod
+    def max_win(hwnd):
+        """最大化窗口
+        参数：hwnd ： 需要关闭的窗口的句柄
+        """
+        win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
 
     @staticmethod
     def close_win(hwnd):
@@ -275,18 +344,6 @@ class WeChatBackgroundOperation:
         hwnd ： 需要显示的窗口的句柄
         """
         win32gui.ShowWindow(hwnd, win32con.SW_SHOW)  # 显示
-
-    @staticmethod
-    def top_win(hwnd):
-        """将窗口置顶
-        hwnd ： 窗口的句柄
-        """
-        win32gui.SetWindowPos(
-            hwnd,
-            win32con.HWND_TOPMOST,  # 置顶层
-            0, 0, 0, 0,
-            win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
-        )
 
     @staticmethod
     def cancel_top_win(hwnd):
