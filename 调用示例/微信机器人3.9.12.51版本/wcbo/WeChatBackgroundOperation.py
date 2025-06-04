@@ -241,7 +241,7 @@ class WeChatBackgroundOperation:
 
     @staticmethod
     def wheel(control, wheel_time=0.01, direction = "down"):
-        """列表滚动
+        """前台列表滚动
         control：控件对象
         wheel_time ： 滚动时间(默认滚动0.01秒)
         direction ： 滚动反向(默认为"down"，向下)，不区分大小写
