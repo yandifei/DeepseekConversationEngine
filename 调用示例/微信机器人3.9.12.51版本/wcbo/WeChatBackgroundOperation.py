@@ -255,20 +255,12 @@ class WeChatBackgroundOperation:
     def percent_wheel(control, horizontal_percent = -1, vertical_percent = -1):
         """列表百分比滚动（必须要确保控件支持滚动和滚动可用）-1代表不动
         control：控件对象
-        horizontal_percent : 横向百分比
-        vertical_percent : 纵向百分比
+        horizontal_percent : 横向百分比(1-100)
+        vertical_percent : 纵向百分比(1-100)
         """
-        # WheelUp
-        scroll_pattern = control.GetScrollPattern()
-        # 获取当前滚动位置(根据实际情况获取当前百分比位置)
-        current_horizontal = scroll_pattern.VerticalScrollPercent if scroll_pattern.VerticallyScrollable else 0
-        current_vertical =  scroll_pattern.HorizontallyScrollable if scroll_pattern.HorizontallyScrollable else 0
-        # 计算新位置（限制在0-100 范围）
-        horizontal = max(0, min(100, current_horizontal + horizontal_percent))
-        vertical = max(0, min(100, current_vertical + vertical_percent))
+        # bug就是vertical_percent是浮点数啊！！！！！50%是0.5(AI解答错的，我这里测试成功)
         # 从当前百分比开始位移
-        control.GetScrollPattern().SetScrollPercent(horizontal, vertical)
-        pass
+        control.GetScrollPattern().SetScrollPercent(horizontal_percent / 100, vertical_percent / 100)
 
 
     def back_wheel(self, control, scroll_times = 1, direction = "down"):
@@ -278,10 +270,8 @@ class WeChatBackgroundOperation:
         scroll_times ： 滚动次数(默认为1)
         direction ： 滚动方向(默认为"down",向下)
         """
-        # 获取控件中心x和y的绝对坐标
-        screen_x, screen_y = control.BoundingRectangle.xcenter(), control.BoundingRectangle.ycenter()
-        # 把屏幕坐标转换为客户端坐标（应用窗口的坐标）
-        client_x, client_y = win32gui.ScreenToClient(self.hwnd, (screen_x, screen_y))
+        # 获取控件中心x和y的绝对坐标(不需要转换，本身就是客户端坐标)
+        client_x, client_y = control.BoundingRectangle.xcenter(), control.BoundingRectangle.ycenter()
         # 计算向下滚动量 (WHEEL_DELTA = 120 是标准滚动单位)
         scroll_amount = -scroll_times * win32con.WHEEL_DELTA
         # 坐标转换，16位的整数（通常是坐标值）合并成一个32位的长整型值
@@ -293,7 +283,6 @@ class WeChatBackgroundOperation:
         control.SetFocus()  # 设置焦点(如果不设置焦点窗口就不接收消息)
         # 给窗口发送滚轮消息
         win32gui.SendMessage(self.hwnd, win32con.WM_MOUSEWHEEL, keyboard_key, long_position)
-        pass    # 后面修
 
     @staticmethod
     def top_win(hwnd):

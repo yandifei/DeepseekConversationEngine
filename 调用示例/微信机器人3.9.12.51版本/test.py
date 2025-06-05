@@ -20,18 +20,29 @@ import uiautomation as auto
 # print(formats)
 
 # 读取剪切板时，我们可以根据当前剪切板的格式分别作不同的处理：
-formats = auto.GetClipboardFormats()
-for k, v in formats.items():
-    if k == auto.ClipboardFormat.CF_UNICODETEXT:
-        print("文本格式：",auto.GetClipboardText())
-    elif k == auto.ClipboardFormat.CF_HTML:
-        htmlText = auto.GetClipboardHtml()
-        print("富文本格式：", htmlText)
-    elif k == auto.ClipboardFormat.CF_BITMAP:
-        bmp = auto.GetClipboardBitmap()
-        print("位图：", bmp)
+# formats = auto.GetClipboardFormats()
+# for k, v in formats.items():
+#     if k == auto.ClipboardFormat.CF_UNICODETEXT:
+#         print("文本格式：",auto.GetClipboardText())
+#     elif k == auto.ClipboardFormat.CF_HTML:
+#         htmlText = auto.GetClipboardHtml()
+#         print("富文本格式：", htmlText)
+#     elif k == auto.ClipboardFormat.CF_BITMAP:
+#         bmp = auto.GetClipboardBitmap()
+#         print("位图：", bmp)
     # elif k == auto.ClipboardFormat.
     # else:
     #     other = auto.GetClipboardFormats()
     #     print(other)
 
+a = [1,2,4,4,5]
+b = [4,5,6,8,8,9]
+c = [9,10,10,11,11]
+min_len = min(len(a), len(b))
+print(min_len)
+# 从大到小检查 k，找到第一个匹配就返回（高效关键）
+for k in range(min_len, 0, -1):
+    # 使用索引比较，避免创建切片（减少内存开销）
+    if all(a[i] == b[k - len(a) + i] for i in range(len(a) - k, len(a))):
+        print(k)
+print(0)
