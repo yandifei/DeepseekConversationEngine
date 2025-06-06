@@ -35,14 +35,34 @@ import uiautomation as auto
     #     other = auto.GetClipboardFormats()
     #     print(other)
 
-a = [1,2,4,4,5]
-b = [4,5,6,8,8,9]
-c = [9,10,10,11,11]
-min_len = min(len(a), len(b))
-print(min_len)
-# 从大到小检查 k，找到第一个匹配就返回（高效关键）
-for k in range(min_len, 0, -1):
-    # 使用索引比较，避免创建切片（减少内存开销）
-    if all(a[i] == b[k - len(a) + i] for i in range(len(a) - k, len(a))):
-        print(k)
-print(0)
+# def merge_lists(lists):
+#     if not lists:
+#         return []
+#     result = lists[0][:]  # 复制第一个列表
+#     for i in range(1, len(lists)):
+#         current_list = lists[i]
+#         if not current_list:  # 跳过空列表
+#             continue
+#         # 计算最大可能的重叠长度
+#         max_overlap = min(len(result), len(current_list))
+#         overlap = 0
+#         # 检查实际重叠长度
+#         for j in range(1, max_overlap + 1):
+#             if result[-j] != current_list[j - 1]:
+#                 break
+#             overlap = j  # 更新重叠长度
+#         # 添加非重叠部分
+#         result.extend(current_list[overlap:])
+#     return result
+#
+# # 测试用例
+# list1 = [1, 2, 3, 4, 4, 4]
+# list2 = [4, 4, 5, 6, 7, 8, 9]
+# list3 = [9, 10, 11, 12]
+# lists = [list1, list2, list3]
+# merged = merge_lists(lists)
+# print(merged)  # 输出: [1, 2, 3, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+a = [1,2,3,4,5,6,6,7,8,9,9,9]
+a = set(a)
+print(a)

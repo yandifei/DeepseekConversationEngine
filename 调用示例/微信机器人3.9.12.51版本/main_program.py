@@ -22,4 +22,4 @@ cts = Contacts(wc)  # 创建通讯录对象，传入整个微信客户端对象
 # wc.back_wheel(cts.contacts_list_control)
 # wc.wheel(cts.contacts_list_control, 1)
 # wc.percent_wheel(cts.contacts_list_control, -1, 50)
-cts.find_same_name()
+cts.find_same_remark_name()

@@ -26,7 +26,7 @@ class Contacts:
         # self.contacts_list_control = self.wc.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[1].GetChildren()[-1].GetFirstChildControl().GetFirstChildControl()
         self.contacts_list_control = self.wc.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetLastChildControl().GetFirstChildControl().GetFirstChildControl()
 
-    def find_same_remark_name(self, time = 2):
+    def find_same_remark_name(self, time = 1):
         """遍历好友列表找出备注名同名的好友(没有没注名就是原名)
         time ： 每次的滚动时间
         """
@@ -34,36 +34,52 @@ class Contacts:
         self.refresh_contacts_controls()    # 刷新好友列表控件(之前在别的界面没拿到)
         # 拿到滚动区域的接口
         scroll_pattern = self.contacts_list_control.GetScrollPattern()  # (报黄不用管)
-        scroll_pattern.SetScrollPercent(-1, 100)   # 列表移动到末尾(拿数据)
-        # 倒数第一和第二个有重名
-        if self.contacts_list_control.GetLastChildControl().Name == self.contacts_list_control.GetChildren()[-2].Name:
-            print(f"\033[93m末尾出现重名：{self.wc.contacts_button.GetChildren()[-1].Name}\033[0m")
-        end_flag = self.contacts_list_control.GetChildren()[-1].Name   # 设置结束标志
-        scroll_pattern.SetScrollPercent(-1, 0)   # 列表移动到开头
         # 开始遍历逻辑
-        remark_name_list = [name for name in self.contacts_list_control.GetChildren().Name]   # 备注名列表(初始化是带上旧表)
-        while self.contacts_list_control.GetLastChildControl().Name != end_flag:  # 如果没有找到最后一个控件就不停止滚动
-            old_list = [name for name in self.contacts_list_control.GetChildren().Name] # 遍历好友备注名
+        scroll_pattern.SetScrollPercent(-1, 0)   # 列表移动到开头
+        # 1.定位到好友列表开始的地方， 滚动列表找到好友开始的部分
+        while self.contacts_list_control.GetChildren()[-2].Name != "列表项目" and self.contacts_list_control.GetChildren()[-2].GetFirstChildControl().GetFirstChildControl().Name != "A":
             self.wc.back_wheel(self.contacts_list_control, time)  # 滚动列表
-            new_list = [name for name in self.contacts_list_control.GetChildren().Name] # 遍历滚动后的好友备注名
-            link_index =  old_list[-1] # 拿到旧表最后一个值
-            # 判断这个值在不在新表
-            if link_index not in new_list:    # 旧表的最后一个元素不在新表代表滚动过头了(断链)
-                raise ValueError("\033[93m滚动太快了，请缩短滚动时间(修该滚动参数)")
-            new_index = new_list.index(old_list[-1]) + 1   # 拿到新内容开始的索引下标
-            remark_name_list.append(new_name for new_name in new_list[new_index:])  # 切片拿到新名字
-        print()
+        # 2.拿到开始控件并后台点击第一个好友
+        # 拿到开始控件控件
+        friend_controls = [control for control in self.contacts_list_control.GetChildren()]  # 遍历好友控件
+        start_control = [control for control in friend_controls if control.GetChildren()[-2].Name == "列表项目" and control.GetChildren()[-2].GetFirstChildControl().GetFirstChildControl().Name == "A"][0]
+        first_fiend_control =
+        # self.wc.back_click()
+        #
 
 
 
 
-        print(1)
+
+        # scroll_pattern.SetScrollPercent(-1, 100)   # 列表移动到末尾(拿数据)
+        # # 倒数第一和第二个有重名
+        # if self.contacts_list_control.GetLastChildControl().Name == self.contacts_list_control.GetChildren()[-2].Name:
+        #     print(f"\033[93m末尾出现重名：{self.wc.contacts_button.GetChildren()[-1].Name}\033[0m")
+        # end_flag = self.contacts_list_control.GetChildren()[-1].Name   # 设置结束标志
+        # scroll_pattern.SetScrollPercent(-1, 0)   # 列表移动到开头
+        # # 开始遍历逻辑
+        # remark_name_list = [control.Name for control in self.contacts_list_control.GetChildren()]   # 备注名列表(初始化是带上旧表)
+        # while self.contacts_list_control.GetLastChildControl().Name != end_flag:  # 如果没有找到最后一个控件就不停止滚动
+        #     old_list = [control.Name for control in self.contacts_list_control.GetChildren()]  # 遍历好友备注名
+        #     self.wc.back_wheel(self.contacts_list_control, time)  # 滚动列表
+        #     new_list = [control.Name for control in self.contacts_list_control.GetChildren()] # 遍历滚动后的好友备注名
+        #     link_index =  old_list[-1] # 拿到旧表最后一个值
+        #     new_index = new_list.index(old_list[-1]) + 1   # 拿到新内容开始的索引下标
+        #     # 判断这个值在不在新表
+        #     if link_index not in new_list:    # 旧表的最后一个元素不在新表代表滚动过头了(断链)
+        #         # raise ValueError("\033[93m滚动太快了，请缩短滚动时间(修该滚动参数)")
+        #         print("\033[93m滚动太快了，请缩短滚动时间(修该滚动参数)")
+        #         new_index = 0   # 下标置为0
+        #     remark_name_list.extend(new_name for new_name in new_list[new_index:])  # 切片拿到新名字
+        # # 可以通过运行时间RuntimeId来判断控件的唯一性
+        # print(remark_name_list)
 
 
-        scroll_percent = 0  # 滚动百分比，初始为0 代表开头
-        # while scroll_percent <= 1:  # 小于等于 1 代表没有遍历完整个列表
-        #     scroll_pattern.SetScrollPercent(-1, scroll_percent)
-        #     scroll_percent += incremental_value / 100  # 每次增加的百分比
+
+
+
+
+
 
 
     def record_all_friends(self,path):
