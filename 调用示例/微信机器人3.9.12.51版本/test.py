@@ -63,6 +63,16 @@ import uiautomation as auto
 # merged = merge_lists(lists)
 # print(merged)  # 输出: [1, 2, 3, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-a = [1,2,3,4,5,6,6,7,8,9,9,9]
-a = set(a)
-print(a)
+# a = [1,2,3,4,5,6,6,7,8,9,9,9]
+# a = set(a)
+# print(a)
+a = 1
+while True:
+    for i in range(1):
+        if a:
+            if a:
+                print(1)
+                break
+    else:
+        continue
+    break

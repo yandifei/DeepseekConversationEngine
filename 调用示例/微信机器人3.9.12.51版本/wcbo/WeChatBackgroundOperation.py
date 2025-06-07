@@ -3,6 +3,8 @@
 对消息实现监听或收发
 处理添加好友和问题回答
 """
+# 自带的库
+from time import sleep
 # 导入第三方库
 import uiautomation
 import win32api
@@ -51,6 +53,9 @@ class WeChatBackgroundOperation:
         self.news_button : uiautomation.Control = None # "看一看"
         # 调用方法获得额外的控件
         self.toolbar_button()   # 遍历导航栏额外的控件
+        """搜索框(固定的控件按钮)"""
+        # 微信-最后一格控件-控件0-控件1-控件0-控件0-最后一格控件-控件0
+        self.search_box = self.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetFirstChildControl()
         """初始化调用的方法"""
 
 
@@ -198,7 +203,7 @@ class WeChatBackgroundOperation:
         """
         uiautomation.Click(control.BoundingRectangle.xcenter(), control.BoundingRectangle.ycenter())
 
-    def back_click(self,control):
+    def back_click(self, control):
         """向窗口发送点击消息
         参数：control：控件对象
         """
@@ -215,6 +220,35 @@ class WeChatBackgroundOperation:
         win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, long_position)
         # 模拟鼠标弹起(窗口句柄和客户端坐标)
         win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, long_position)
+
+    def back_key(self, control, vk_code):
+        """后台按键(向窗口发送按键)
+        参数：control：控件对象
+        vk_code  ： 虚拟按键码
+        """
+        # 先发送 WM_ACTIVATE 激活窗口再发送 WA_CLICKACTIVE 鼠标激活 (这是必要的一步)
+        # win32api.SendMessage(self.hwnd, win32con.WM_ACTIVATE, win32con.WA_CLICKACTIVE,0)
+        """位范围	名称	            说明
+            0-15	Repeat Count	    按键的重复次数（通常为0，表示首次按下）
+            16-23	Scan Code	        按键的硬件扫描码（通过 MapVirtualKey(vk_code, 0) 获取）
+            24	    Extended Key	    是否为扩展键（如方向键、功能键等，需设为 1）
+            25-28	Reserved	        保留位（必须为0）
+            29	    Context Code	    按键时是否按住 Alt 键（0=未按住，1=按住）
+            30	    Previous State	    按键之前的状态（0=未按下，1=已按下；KEYUP消息必须设为1）
+            31	    Transition State	按键状态转换（0=按下，1=释放；KEYDOWN=0, KEYUP=1）
+        """
+        # 构建lParam参数
+        scan_code = win32api.MapVirtualKey(vk_code, 0)  # 获取扫描码
+        # KEYDOWN消息的lParam(32位的消息参数（LONG_PTR类型）)
+        lparam_down = (0 << 24) | (scan_code << 16) | 0x1
+        # KEYUP消息的lParam（设置第31位表示释放）
+        lparam_up = (0x3 << 24) | (scan_code << 16) | 0x1 | 0xC0000000
+        control.SetFocus()  # 必须设置焦点(上面的用不了，估计是激活只是激活了整个窗口，没有激活控件)
+        # 向微信窗口发送后台消息
+        win32api.PostMessage(self.hwnd, win32con.WM_KEYDOWN, vk_code, lparam_down)
+        win32api.PostMessage(self.hwnd, win32con.WM_KEYUP, vk_code, lparam_up)
+
+
 
     @staticmethod
     def is_wheel(control):
