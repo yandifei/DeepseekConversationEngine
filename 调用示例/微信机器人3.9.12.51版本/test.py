@@ -1,4 +1,6 @@
+import psutil
 import uiautomation as auto
+import win32gui
 
 # treeScrollPattern = tree.GetScrollPattern()
 # treeScrollPattern.SetScrollPercent(-1,0)
@@ -65,14 +67,14 @@ import uiautomation as auto
 
 # a = [1,2,3,4,5,6,6,7,8,9,9,9]
 # a = set(a)
-# print(a)
-a = 1
-while True:
-    for i in range(1):
-        if a:
-            if a:
-                print(1)
-                break
-    else:
-        continue
-    break
+# for i in range(2):
+#     print(i)
+# print(a.index(9))
+def find_pid(process_name):
+    """提供进程名找到进程号"""
+    for proc in psutil.process_iter(['pid', 'name']):
+        if proc.info['name'] == process_name:
+            return proc.info['pid']
+    return False
+a = find_pid("WeChat.exe")
+print(a)

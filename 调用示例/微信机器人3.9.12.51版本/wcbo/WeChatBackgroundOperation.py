@@ -4,7 +4,7 @@
 处理添加好友和问题回答
 """
 # 自带的库
-from time import sleep
+
 # 导入第三方库
 import uiautomation
 import win32api
