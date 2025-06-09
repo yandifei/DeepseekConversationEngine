@@ -18,13 +18,14 @@ class Contacts:
         # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0(联系人列表,子控件就是人了)
         self.contacts_list_control : uiautomation.ListControl = None    # 好友列表控件
 
-    def get_contacts_controls(self):
-        """获得(刷新)通讯录控件"""
+    def click(self):
+        """点击和获得(刷新)通讯录控件"""
         # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0(联系人列表,子控件就是人了)
         # self.contacts_list_control = self.wc.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[1].GetChildren()[-1].GetFirstChildControl().GetFirstChildControl()
+        self.wc.back_click(self.wc.contacts_button)  # 点击通讯录按钮
         self.contacts_list_control = self.wc.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetLastChildControl().GetFirstChildControl().GetFirstChildControl()
 
-    def is_same_remark_name(self,sleep_time = 0.02, out = False):
+    def find_same_remark_name(self,sleep_time = 0.02, out = False):
         """遍历好友列表找出备注名同名的好友(没有没注名就是原名)
         参数：
         sleep_time : 按键的间隔时间(必须设置，不然滚动太快导致无法到达第一个好友处)
@@ -35,8 +36,8 @@ class Contacts:
         if sleep_time < 0.02:   # 速度太快
             raise ValueError("速度太快了，建议0.02及以上，不然好友读取可能有遗漏")
         count_name_dict = dict()  # 创建字典统计好友名的次数
-        self.wc.back_click(self.wc.contacts_button)  # 点击通讯录按钮
-        self.get_contacts_controls()    # 刷新好友列表控件(之前在别的界面没拿到)
+
+        self.click()    # 刷新好友列表控件(之前在别的界面没拿到)
         # 拿到滚动区域的接口
         scroll_pattern = self.contacts_list_control.GetScrollPattern()  # (报黄不用管)
 
@@ -151,6 +152,7 @@ class Contacts:
                 num += count
             print(f"共有：{num} 好友")
         return duplicate_dict
+
 
 
     def record_all_friends(self,path):

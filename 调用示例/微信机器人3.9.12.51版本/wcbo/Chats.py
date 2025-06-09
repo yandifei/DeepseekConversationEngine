@@ -1,5 +1,5 @@
 """Chats.py
-聊天管理
+聊天管理相关
 消息接收和发送
 """
 # 系统自带库
@@ -11,14 +11,76 @@ from wcbo import WeChatBackgroundOperation  # 导入微信这个类
 
 class Chats:
     def __init__(self, wechat_client: WeChatBackgroundOperation):
-        """通讯录管理
+        """聊天管理
         wechat_client : 微信对象
         """
         self.wc = wechat_client  # 接收微信这个对象
-        # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0(联系人列表,子控件就是人了)
+        # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0-控件0-控件0(会话列表里面的子控件就是可滚动的列表了)
         self.chats_list_control: uiautomation.ListControl = None  # 聊太列表控件
+        self.message_list_control : uiautomation.ListControl = None # 消息列表控件
+        self.message_list = None # 消息列表
 
-    def get_chats_list_control(self):
-        
+
+
+    def click(self):
+        """点击和获得(刷新)会话列表控件"""
+        # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0-控件0-控件0(会话列表里面的子控件就是可滚动的列表了)
+        self.wc.back_click(self.wc.chats_button)  # 点击聊天按钮
+        self.chats_list_control = self.wc.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetLastChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl()
+        self.message_list = self.chats_list_control.GetChildren()   # 消息列表
+
+    """消息相关"""
+    def get_message_list(self):
+        """获得或刷新消息列表
+        注意：如果没有消息，消息列表是没有子控件的
+        """
+        # 微信-最后控件-控件0-控件2-控件0-控件0-控件0-控件0-最后一个控件-控件0-控件0-消息列表控件-消息列表底下的所有子孩子
+        self.message_list : list = self.wc.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetChildren()
+
+    def is_message_exist(self, out = False):
+        """判断当前聊天窗口是否存在消息体(有可能)
+        参数：
+        out : 是否打印提示
+        返回值：
+        没有消息体返回False，有消息体返回True
+        """
+        if len(self.message_list) == 0:   # 消息列表没有子控件(即没有任何消息体)
+            if out: print("\033[93m当前聊天窗口没有任何消息\033[0m")
+            return False
+        return True
+
+    @staticmethod
+    def split_ont_message(message_control : uiautomation.Control, out = False):
+        """单条消息解析(消息体解析)，消息解析的过程会被打需要做try的处理
+        message_control : 消息体控件(消息列表里面的一个子控件)
+        out : 是否打印提示
+        """
+        one_message = ""    # 构造消息体
+        def tree_message(message_body_control: uiautomation.Control):
+            """递归遍历消息体（非时间消息，浪费资源）
+            参数： message_body_control ： 消息体控件(一条消息的组成)
+            """
+            nonlocal one_message    # 确定作用域
+            for control in message_body_control.GetChildren():  # 解析子控件
+                if control.GetChildren():   # 有子控件
+                    tree_message(control)   # 递归解析
+                    return True
+                elif control.Name != "":    # 消息组合控件有效
+                    one_message += control.Name
+            return True
+
+        message_control = message_control.GetFirstChildControl()    # 进入消息体（解析没用的消息控件）
+        # 先判断是否是时间控件(时间)
+        if not message_control.GetChildren():    # 时间控件（没有子孩子）
+            return message_control.Name # 返回时间
+        else:
+            tree_message(message_control)  # 非时间的消息体(3个基础控件)
+            if out: print(one_message)
+        return one_message
+
+    def get_message(self):
+        """获得消息列表的所有消息(不进行深入解析)"""
+
+
 
 
