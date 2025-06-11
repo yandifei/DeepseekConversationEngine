@@ -70,11 +70,16 @@ import win32gui
 # for i in range(2):
 #     print(i)
 # print(a.index(9))
-def find_pid(process_name):
-    """提供进程名找到进程号"""
-    for proc in psutil.process_iter(['pid', 'name']):
-        if proc.info['name'] == process_name:
-            return proc.info['pid']
-    return False
-a = find_pid("WeChat.exe")
-print(a)
+# def find_pid(process_name):
+#     """提供进程名找到进程号"""
+#     for proc in psutil.process_iter(['pid', 'name']):
+#         if proc.info['name'] == process_name:
+#             return proc.info['pid']
+#     return False
+# a = find_pid("WeChat.exe")
+# print(a)
+
+
+from datetime import datetime
+
+print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

@@ -10,12 +10,8 @@ print(f"实验微信名：{wc.wc_name}\n实验微信ID：{wc.wc_id}\n实验微�
 
 cs = Chats(wc)   # 创建聊天对象，传入整个微信客户端对象
 cs.click() # 点击聊天控件并获得会话列表
-cs.get_message_list(True)   # 获得消息列表
-# print(cs.message_list[1].Name)
+cs.get_message_list(True)   # 获得消息列表)
 
-# if cs.is_message_exist():   # 如果有消息则解析
-#     for one_message_control in cs.message_list: #解析整个消息列表
-#         cs.split_ont_message(one_message_control,True)  # 单条消息解析
-#         print()
+cs.get_message(True)    # 获得所有消息，True打印输出
 
 # cs.split_ont_message(True)

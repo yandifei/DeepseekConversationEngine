@@ -30,7 +30,7 @@ class Chats:
         # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0-控件0-控件0(会话列表里面的子控件就是可滚动的列表了)
         self.wc.back_click(self.wc.chats_button)  # 点击聊天按钮
         self.chats_list_control = self.wc.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetLastChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl()
-        self.message_list = self.chats_list_control.GetChildren()   # 消息列表
+        self.message_list = self.get_message_list   # 尝试获取消息列表
         sleep(render_time)    # 停顿1秒用来微信渲染
 
     """消息相关"""
@@ -80,8 +80,36 @@ class Chats:
             if out: print(one_message)
         return one_message
 
-    def get_message(self):
-        """获得消息列表的所有消息(不进行深入解析)"""
+    def get_message(self, out = False):
+        """获得消息列表的所有消息(不进行深入解析)
+        out : 是否打印输出提示,默认False
+        返回值：打印所有消息
+        """
+        messages = list()  # 所有消息
+        for simple_message in self.message_list:    # 仅仅解析简单的消息
+            if out : print(simple_message.Name)
+            messages.append(simple_message.Name)
+        return messages
+
+
+
+
+    def get_all_message(self):
+        """获得消息列表所有消息(深度解析，获得人名和分析消息体)"""
+        # {
+        #    {
+        #     "timestamp": "2025-06-11 23:48:57"
+        #     "role": "我"
+        #     "content": "Hello World"
+        #    },
+        #    {
+        #     "timestamp": "2025-06-11 23:48:57"
+        #     "role": "好友"
+        #     "content": "你好"
+        #    }
+        # }
+        messages = dict()   # 消息字典(时间、发送者、发送消息)
+
 
 
 
