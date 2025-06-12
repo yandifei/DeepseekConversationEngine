@@ -21,9 +21,9 @@ class Contacts:
     def click(self):
         """点击和获得(刷新)通讯录控件"""
         # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0(联系人列表,子控件就是人了)
-        # self.contacts_list_control = self.wc.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[1].GetChildren()[-1].GetFirstChildControl().GetFirstChildControl()
+        # self.contacts_list_control = self.wc.win.GetChildren()[-1].GetChildren()[0].GetChildren()[1].GetChildren()[-1].GetFirstChildControl().GetFirstChildControl()
         self.wc.back_click(self.wc.contacts_button)  # 点击通讯录按钮
-        self.contacts_list_control = self.wc.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetLastChildControl().GetFirstChildControl().GetFirstChildControl()
+        self.contacts_list_control = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetLastChildControl().GetFirstChildControl().GetFirstChildControl()
 
     def find_same_remark_name(self,sleep_time = 0.02, out = False):
         """遍历好友列表找出备注名同名的好友(没有没注名就是原名)

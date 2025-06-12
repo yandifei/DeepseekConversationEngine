@@ -13,30 +13,30 @@ import win32con
 
 class WeChatBackgroundOperation:
     """微信后台操作类"""
-    def __init__(self, wc_name = None, wc_id = None, init_min_win = True):
+    def __init__(self, name = None, id = None, init_min_win = True):
         """初始化类
         参数：
-        wc_name ： 微信名，默认None(仅在控制多个微信时需要填写)
-        wc_id : 微信号，默认None(仅在控制多个微信时需要填写)
+        name ： 微信名，默认None(仅在控制多个微信时需要填写)
+        id : 微信号，默认None(仅在控制多个微信时需要填写)
         init_min_win : 默认True初始化时最小化窗口(为了方便开发可以改为False)
         """
         """初始化属性定义"""
-        self.wc_name = None     # 用户微信名
-        self.wc_id = None       # 用户微信号
+        self.name = None     # 用户微信名
+        self.id = None       # 用户微信号
         self.wc_area = None     # 用户微信地区
         self.hwnd = None        # 窗口句柄
-        self.wc_win : uiautomation.WindowControl = None      # 窗口控件对象
+        self.win : uiautomation.WindowControl = None      # 窗口控件对象
         self.init_min_win = init_min_win # 最小化窗口标志位
-        self.get_wc_win(wc_name, wc_id)     # 使用方法绑定窗口并录入属性(获得当前微信或从多开的微信中找到指定的微信)
+        self.get_win(name, id)     # 使用方法绑定窗口并录入属性(获得当前微信或从多开的微信中找到指定的微信)
         """标题栏(title_bar)[窗口控制按钮]"""
         # 微信-最后控件-控件0-最后控件-最后控件(工具栏)[里面的子控件就是窗口控制按钮了]
-        self.top_button = self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[-1].GetChildren()[-1].GetFirstChildControl()  # 置顶（复合按钮）按钮
+        self.top_button = self.win.GetChildren()[-1].GetChildren()[0].GetChildren()[-1].GetChildren()[-1].GetFirstChildControl()  # 置顶（复合按钮）按钮
         self.min_button = self.top_button.GetNextSiblingControl()  # 最小化按钮
         self.max_button = self.min_button.GetNextSiblingControl()  # 最大化按钮
         self.close_button = self.max_button.GetNextSiblingControl()  # 关闭按钮
         """导航栏(按钮多少可变)"""
         # 微信-最后一格控件-1控件-导航(子控件就是导航栏的按钮了)[这里直接拿所有子控件]
-        self.navigation_bar =  self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren() # 导航栏
+        self.navigation_bar =  self.win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren() # 导航栏
         # 固定控件
         self.avatar_button = self.navigation_bar[0]                                 # 头像按钮
         self.chats_button = self.navigation_bar[1]                                  # 聊天按钮
@@ -55,7 +55,7 @@ class WeChatBackgroundOperation:
         self.toolbar_button()   # 遍历导航栏额外的控件
         """搜索框(固定的控件按钮)"""
         # 微信-最后一格控件-控件0-控件1-控件0-控件0-最后一格控件-控件0
-        self.search_box = self.wc_win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetFirstChildControl()
+        self.search_box = self.win.GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetFirstChildControl()
         """初始化调用的方法"""
 
 
@@ -80,53 +80,53 @@ class WeChatBackgroundOperation:
             return uiautomation.ControlFromHandle(hwnd)
         return None
 
-    def get_wc_win(self, wc_name = None, wc_id = None):
+    def get_win(self, name = None, id = None):
         """绑定获得微信窗口对象
         参数：
-        wc_name ： 微信名(默认None)，仅在多开微信时才能用上
-        wc_id : 微信号，默认None(仅在控制多个微信时需要填写)
+        name ： 微信名(默认None)，仅在多开微信时才能用上
+        id : 微信号，默认None(仅在控制多个微信时需要填写)
         min_win : 是否最小化窗口,默认True，为了调试可以设置为False
         返回值： 微信窗口对象
         """
-        all_wc_win = list() # 存放所有微信窗口
-        homonymous_wc_win = list()  # 存放同名的微信窗口
+        all_win = list() # 存放所有微信窗口
+        homonymous_win = list()  # 存放同名的微信窗口
         desktop_wins = uiautomation.GetRootControl().GetChildren()  # 获取当前桌面对象
         for win in desktop_wins:
             # 考虑到上百个微信，这里这种方法处理
             if win.Name != "微信" or win.ClassName != "WeChatMainWndForPC":
                 continue    # 跳过
             else:   # 把单个或多个微信窗口控件加入列表
-                all_wc_win.append(win)
-        if len(all_wc_win) == 0:     # 没有找到任何的微信窗口
+                all_win.append(win)
+        if len(all_win) == 0:     # 没有找到任何的微信窗口
             raise EnvironmentError("请检查是否已经登录并打开微信了")
-        elif len(all_wc_win) == 1:   # 仅仅有一个微信代表仅仅开了一个微信
-            self.hwnd, self.wc_win = all_wc_win[0].NativeWindowHandle, all_wc_win[0]  # 录入窗口对象（这个必须在前）
+        elif len(all_win) == 1:   # 仅仅有一个微信代表仅仅开了一个微信
+            self.hwnd, self.win = all_win[0].NativeWindowHandle, all_win[0]  # 录入窗口对象（这个必须在前）
             if self.init_min_win: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)  # 是否调用win的api最小化窗口
-            self.wc_name, self.wc_id, self.wc_area = self.get_user_info()  # 录入用户属性
-            return all_wc_win[0]  # 拿到微信窗口后返回
-        elif len(all_wc_win) >= 2:   # 多个微信窗口
-            if not wc_name:     # 微信名为空或没填就触发警告(以下需要用到微信名)
+            self.name, self.id, self.wc_area = self.get_user_info()  # 录入用户属性
+            return all_win[0]  # 拿到微信窗口后返回
+        elif len(all_win) >= 2:   # 多个微信窗口
+            if not name:     # 微信名为空或没填就触发警告(以下需要用到微信名)
                 raise ValueError("请填写微信名，检测到微信多开需要微信名进行判断")
-            for wc_win in all_wc_win:    # 遍历多个微信的窗口
+            for win in all_win:    # 遍历多个微信的窗口
                 # 过滤掉了非微信窗口后，开始过滤非指定账号(微信-最后控件-控件0-控件1(工具栏)-头像按钮(名称是微信名))
-                if wc_win.GetChildren()[-1].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().Name == wc_name:
-                    homonymous_wc_win.append(wc_win)    # 把符合用户微信名的窗口添加到同名列表
-            if len(homonymous_wc_win) == 0:     # 没有这个窗口
-                raise EnvironmentError(f"没有找到微信名：{wc_name} 的微信窗口，请检查是否已经登录并打开此微信")
-            elif len(homonymous_wc_win) == 1:     # 同名窗口列表为1 代表没有其他同名窗口
-                self.hwnd, self.wc_win = homonymous_wc_win[0].NativeWindowHandle, homonymous_wc_win[0] # 录入非同名窗口对象（这个必须在前）
+                if win.GetChildren()[-1].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().Name == name:
+                    homonymous_win.append(win)    # 把符合用户微信名的窗口添加到同名列表
+            if len(homonymous_win) == 0:     # 没有这个窗口
+                raise EnvironmentError(f"没有找到微信名：{name} 的微信窗口，请检查是否已经登录并打开此微信")
+            elif len(homonymous_win) == 1:     # 同名窗口列表为1 代表没有其他同名窗口
+                self.hwnd, self.win = homonymous_win[0].NativeWindowHandle, homonymous_win[0] # 录入非同名窗口对象（这个必须在前）
                 if self.init_min_win: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)  # 是否调用win的api最小化窗口
-                self.wc_name, self.wc_id, self.wc_area = self.get_user_info()   # 录入用户属性
-                return all_wc_win[0]  # 拿到微信窗口后返回
-            elif len(homonymous_wc_win) >= 2:   # 有2个微信名相同的微信窗口
-                if not wc_id:       # 检测微信号是否填写
+                self.name, self.id, self.wc_area = self.get_user_info()   # 录入用户属性
+                return all_win[0]  # 拿到微信窗口后返回
+            elif len(homonymous_win) >= 2:   # 有2个微信名相同的微信窗口
+                if not id:       # 检测微信号是否填写
                     raise ValueError("请填写微信号，检测到微信多开且有同名需要微信号进行判断")
-                for wc_win in homonymous_wc_win:    # 从同微信名的微信窗口中找
-                    self.hwnd, self.wc_win = wc_win.NativeWindowHandle, wc_win    # 窗口属性临时传入可疑窗口控件对象(为了下面的方法调用)
+                for win in homonymous_win:    # 从同微信名的微信窗口中找
+                    self.hwnd, self.win = win.NativeWindowHandle, win    # 窗口属性临时传入可疑窗口控件对象(为了下面的方法调用)
                     if self.init_min_win: win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)  # 是否调用win的api最小化窗口
-                    self.wc_name, self.wc_id, self.wc_area = self.get_user_info()  # 获得用户信息(最小化窗口)
-                    if wc_id == self.wc_id: # 调用方法拿到微信号进行对比
-                        return wc_win
+                    self.name, self.id, self.wc_area = self.get_user_info()  # 获得用户信息(最小化窗口)
+                    if id == self.id: # 调用方法拿到微信号进行对比
+                        return win
                 raise EnvironmentError(f"请检查微信号是否填写正确，没有找到微信号对得上的窗口，")
         return None # 其他情况就放回空值
 
@@ -173,27 +173,27 @@ class WeChatBackgroundOperation:
         """获得用户信息(最小化窗口)
         参数：
         返回值：
-        wc_name ； 微信名
-        wc_id ： 微信号
+        name ； 微信名
+        id ： 微信号
         wc_area ： 地区名
         """
         # 微信-最后一格控件-1控件-导航-1控件(头像按钮avatar_button)
-        self.back_click(self.wc_win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren()[0])  # 后台点击头像这个按钮
-        avatar_win = self.wc_win.GetFirstChildControl() # 获得微信下的第一个窗口(小窗口有的的时候这个就有效)
+        self.back_click(self.win.GetChildren()[-1].GetChildren()[0].GetChildren()[0].GetChildren()[0])  # 后台点击头像这个按钮
+        avatar_win = self.win.GetFirstChildControl() # 获得微信下的第一个窗口(小窗口有的的时候这个就有效)
         # 判断是否是头像窗口(通过类名和标题判断)
         if avatar_win.ClassName == "ContactProfileWnd" and avatar_win.Name == "微信":  # 怕渲染需要时间导致控件无法读取(应该不会吧，想改while)
             # 微信-控件1(微信小窗口)-控件0-控件0-控件0-控件0-控件1(里面的子控件就是需要提取的内容)
             infos_button = avatar_win.GetChildren()[1].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetChildren()[1]
             # 控件1(里面的子控件就是需要提取的内容)-控件0-名字文本控件
-            wc_name = infos_button.GetFirstChildControl().GetFirstChildControl().Name
+            name = infos_button.GetFirstChildControl().GetFirstChildControl().Name
             # 控件1(里面的子控件就是需要提取的内容)-控件1-控件0-有2个控件(2为微信名)
-            wc_id = infos_button.GetChildren()[1].GetFirstChildControl().GetChildren()[1].Name
+            id = infos_button.GetChildren()[1].GetFirstChildControl().GetChildren()[1].Name
             # 控件1(里面的子控件就是需要提取的内容)-控件1-控件1-有2个控件(2为地方名)
             wc_area = infos_button.GetChildren()[1].GetChildren()[1].GetChildren()[1].Name
             avatar_win.Hide()   # 隐藏头像小窗口
         else:   # 这里干个保险吧
             raise EnvironmentError("读取头像窗口控件失败(关掉窗口或失去焦点就会导致这样)")
-        return wc_name, wc_id, wc_area
+        return name, id, wc_area
 
     """窗口控制方法"""
     @staticmethod
@@ -447,7 +447,7 @@ class WeChatBackgroundOperation:
 
 if __name__ == '__main__':
     wc = WeChatBackgroundOperation("","", False)
-    print(f"实验微信名：{wc.wc_name}\n实验微信ID：{wc.wc_id}\n实验微信地区：{wc.wc_area}")
+    print(f"实验微信名：{wc.name}\n实验微信ID：{wc.id}\n实验微信地区：{wc.wc_area}")
 
 
 
