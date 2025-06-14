@@ -82,8 +82,8 @@ import win32gui
 # print(a)
 
 
-# from datetime import datetime
+from datetime import datetime
 #
-# print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 print(0xC364)

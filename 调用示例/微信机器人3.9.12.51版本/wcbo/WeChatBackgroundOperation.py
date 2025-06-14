@@ -3,6 +3,8 @@
 对消息实现监听或收发
 处理添加好友和问题回答
 """
+from time import sleep
+
 # 自带的库
 
 # 导入第三方库
@@ -213,13 +215,38 @@ class WeChatBackgroundOperation:
         client_x, client_y = win32gui.ScreenToClient(self.hwnd, (screen_x, screen_y))
         # 坐标转换，16位的整数（通常是坐标值）合并成一个32位的长整型值
         long_position = win32api.MAKELONG(client_x, client_y)
-        control.SetFocus()  # 设置焦点(如果不设置焦点窗口就不接收消息)
         # 模拟鼠标移动到窗口上
         # win32api.SendMessage(self.hwnd, win32con.WM_MOUSEMOVE, 0, long_position)
+        # 激活窗口
+        # win32gui.SendMessage(self.hwnd, win32con.WM_SETFOCUS, 0, 0)
+        control.SetFocus()  # 设置焦点(如果不设置焦点窗口就不接收消息)
         # 模拟鼠标按下(窗口句柄和客户端坐标)
         win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, long_position)
         # 模拟鼠标弹起(窗口句柄和客户端坐标)
-        win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, long_position)
+        win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, 0, long_position)
+
+    def back_double_click(self, control, wait_time = 0.05):
+        """向窗口发送双击消息
+        参数：control：控件对象
+        wait_time : 双机等待时间，默认0.1
+        """
+        # 获取控件中心x和y的绝对坐标
+        screen_x, screen_y = control.BoundingRectangle.xcenter(),control.BoundingRectangle.ycenter()
+        # 把屏幕坐标转换为客户端坐标（应用窗口的坐标）
+        client_x, client_y = win32gui.ScreenToClient(self.hwnd, (screen_x, screen_y))
+        # 坐标转换，16位的整数（通常是坐标值）合并成一个32位的长整型值
+        long_position = win32api.MAKELONG(client_x, client_y)
+        # 激活窗口
+        win32gui.SendMessage(self.hwnd, win32con.WM_SETFOCUS, 0, 0)
+        # control.SetFocus()  # 设置焦点激活窗口(如果不设置焦点窗口就不接收消息)
+        # 鼠标模拟移动过去
+        win32api.SendMessage(self.hwnd, win32con.WM_MOUSEMOVE, 0, long_position)
+        # 模拟鼠标双击(窗口句柄和客户端坐标)
+        win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONDBLCLK, win32con.MK_LBUTTON, long_position)
+        # 模拟鼠标弹起
+        win32api.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, 0, long_position)  # 弹起
+
+
 
     def back_key(self, control, vk_code):
         """后台按键(向窗口发送按键)
