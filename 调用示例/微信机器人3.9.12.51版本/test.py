@@ -86,4 +86,4 @@ from datetime import datetime
 #
 print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-print(0xC364)
+print(0xC350)

@@ -270,7 +270,9 @@ class WeChatBackgroundOperation:
         lparam_down = (0 << 24) | (scan_code << 16) | 0x1
         # KEYUP消息的lParam（设置第31位表示释放）
         lparam_up = (0x3 << 24) | (scan_code << 16) | 0x1 | 0xC0000000
-        control.SetFocus()  # 必须设置焦点(上面的用不了，估计是激活只是激活了整个窗口，没有激活控件)
+        # 激活窗口
+        win32gui.SendMessage(self.hwnd, win32con.WM_SETFOCUS, 0, 0)
+        # control.SetFocus()  # 必须设置焦点(上面的用不了，估计是激活只是激活了整个窗口，没有激活控件)
         # 向微信窗口发送后台消息
         win32api.PostMessage(self.hwnd, win32con.WM_KEYDOWN, vk_code, lparam_down)
         win32api.PostMessage(self.hwnd, win32con.WM_KEYUP, vk_code, lparam_up)
