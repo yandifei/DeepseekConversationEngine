@@ -10,6 +10,7 @@ from datetime import datetime
 from time import sleep
 from tkinter import Tk  # 用来获取剪切板的内容的
 # 第三方库
+import requests
 import uiautomation
 import win32api
 import win32gui
@@ -426,7 +427,7 @@ class QQMessageMonitor:
             self.edit_box.SendKeys("{ctrl}v")
             uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
         except Exception as e:
-            print(f"\033[91m出现异常错误:{e},粘贴处发生异常，强制推送启动\033[91m")  # 设置剪切板内容出现异常
+            print(f"\033[91m出现异常错误:{e},粘贴处发生异常，强制推送启动\033[0m")  # 设置剪切板内容出现异常
             # 捕获异常后重新发送（出现异常一般都是剪切板没有内容）
             uiautomation.SetClipboardText(text)  # 设置剪切板内容
             self.edit_box.SetFocus()  # 设置焦点
@@ -462,6 +463,60 @@ class QQMessageMonitor:
     #     print(self.edit_box.Name)
     #     self.edit_box.SetWindowText("1234")
     """权限控制相关"""
+
+
+    """额外模块"""
+    def send_url_image(self, url):
+        """使用接口发送图片
+        url : 图片接口
+        https://t.alcy.cc/moe   # 二次元萌图
+        https://v2.xxapi.cn/api/baisi?return=302   # 三次元白丝
+        https://v2.xxapi.cn/api/heisi?return=302   # 三次元黑丝
+        """
+        try:
+            # 请求超过10秒为超时
+            with Image.open(io.BytesIO(requests.get(url, timeout=10).content)) as img:
+                img.save("临时图片.png", "PNG")
+
+            # 临时使用剪切板，但是又被影响之前的调用
+            temp = self.tkinter.clipboard_get()     # 获得剪切板的内容
+            # 设置剪切板内容为图片
+            with uiautomation.Bitmap.FromFile("临时图片.png")as bmp:
+                uiautomation.SetClipboardBitmap(bmp)
+            self.edit_box.SetFocus()    # 设置焦点
+            self.edit_box.SendKeys("{ctrl}v")
+            uiautomation.SetClipboardText(temp)  # 设置剪切板内容为本来的内容
+        except Exception as e:
+            print(f"\033[91m出现异常错误:{e},粘贴处发生异常，强制推送启动\033[0m")  # 设置剪切板内容出现异常
+            # 捕获异常后重新发送（出现异常一般都是剪切板没有内容）
+            # 设置剪切板内容为图片
+            with uiautomation.Bitmap.FromFile("临时图片.png") as bmp:
+                uiautomation.SetClipboardBitmap(bmp)
+            self.edit_box.SetFocus()  # 设置焦点
+            self.edit_box.SendKeys("{ctrl}v")
+        """后台点击发送按钮"""
+        # 获取发送按钮中心x和y的绝对坐标
+        screen_x, screen_y = self.send_button.BoundingRectangle.xcenter(), self.send_button.BoundingRectangle.ycenter()
+        # 把屏幕坐标转换为客户端坐标（应用窗口的坐标）
+        client_x, client_y = win32gui.ScreenToClient(self.qq_chat_hwnd, (screen_x, screen_y))
+        # 模拟鼠标指针， 传送到指定坐标（坐标必须是相对坐标即客户端坐标）
+        long_position = win32api.MAKELONG(client_x, client_y)
+        # 模拟鼠标按下(窗口句柄和客户端坐标)
+        win32api.SendMessage(self.qq_chat_hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, long_position)
+        # 模拟鼠标弹起(窗口句柄和客户端坐标)
+        win32api.SendMessage(self.qq_chat_hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, long_position)
+
+        """后台点击发送按钮"""
+        # 获取发送按钮中心x和y的绝对坐标
+        screen_x, screen_y = self.send_button.BoundingRectangle.xcenter(), self.send_button.BoundingRectangle.ycenter()
+        # 把屏幕坐标转换为客户端坐标（应用窗口的坐标）
+        client_x, client_y = win32gui.ScreenToClient(self.qq_chat_hwnd, (screen_x, screen_y))
+        # 模拟鼠标指针， 传送到指定坐标（坐标必须是相对坐标即客户端坐标）
+        long_position = win32api.MAKELONG(client_x, client_y)
+        # 模拟鼠标按下(窗口句柄和客户端坐标)
+        win32api.SendMessage(self.qq_chat_hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, long_position)
+        # 模拟鼠标弹起(窗口句柄和客户端坐标)
+        win32api.SendMessage(self.qq_chat_hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, long_position)
 
 
     """消息窗口监听相关"""
@@ -774,6 +829,26 @@ class QQMessageMonitor:
             print(f"\033[91m超出消息最大处理数:{max_processing_queues}，不对消息进行处理\033[0m")  # 亮红色
             message_dict["发送者"], message_dict["发送消息"] = "系统", f"超出消息最大处理数:{max_processing_queues}，不对消息进行处理"
             self.message_processing_queues.append(message_dict)  # 加入消息处理队列
+            """额外模块"""
+        elif "每日涩图" in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 色图发送请求\033[0m")
+            self.send_url_image("https://api.seaya.link/random?type=file")  # 发送图片
+        elif "cos涩图" in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 色图发送请求\033[0m")
+            self.send_url_image("http://api.yujn.cn/api/cos.php")  # 发送图片
+        elif "少女涩图" in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 色图发送请求\033[0m")
+            self.send_url_image("https://cdn.seovx.com/d/?mom=302")  # 发送图片
+        elif "白丝涩图" in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 白丝色图发送请求\033[0m")
+            self.send_url_image("https://v2.xxapi.cn/api/baisi?return=302")  # 发送白丝图片
+        elif "黑丝涩图" in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 黑丝色图发送请求\033[0m")
+            self.send_url_image("https://v2.xxapi.cn/api/heisi?return=302")  # 发送黑丝图片
+        elif "萝莉涩图" in message_dict["发送消息"] or "涩图" in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 色图发送请求\033[0m")
+            self.send_url_image("https://t.alcy.cc/moe")  # 发送图片
+            """正规定模块"""
         # 截获自己被@的情况做出消息处理
         elif f"@{self.monitor_name}" in message_dict["发送消息"]:  # 最新列表获取消息
             if self.monitor_name == message_dict["发送者"]:        # 自己@自己
