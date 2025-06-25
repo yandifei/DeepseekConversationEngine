@@ -5,7 +5,7 @@ pyinstaller -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png --uac-ad
 打包后需要的exe在dist文件夹里面
 
 打包出来后不能用的试试这个指令（我提示却这个组件）
-pyinstaller --hidden-import comtypes --add-data "B:/Pycharm/Anaconda3/envs/QQBot/Lib/site-packages/comtypes;comtypes" -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png --uac-admin -D QQ聊天AI.py
+pyinstaller --hidden-import comtypes --add-data "B:/Pycharm/Anaconda3/envs/QQBot/Lib/site-packages/comtypes;comtypes" --add-data "B:/Pycharm/Anaconda3/envs/QQBot/Lib/site-packages/uiautomation/bin;uiautomation/bin" -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png --uac-admin -D QQ聊天AI.py
 
 --hidden-import comtypes：强制包含 comtypes 模块。
 --add-data：确保 comtypes 的附属文件被正确打包（路径需根据实际虚拟环境调整）。

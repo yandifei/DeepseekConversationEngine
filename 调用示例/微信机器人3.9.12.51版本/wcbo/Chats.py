@@ -16,6 +16,7 @@ class Chats:
         """聊天管理
         wechat_client : 微信对象
         """
+        """会话列表和消息列表"""
         self.wc = wechat_client  # 接收微信这个对象
         try:
             # 微信-最后控件-控件0-控件1-最后控件-控件0-控件0-控件0-控件0(会话列表里面的子控件就是可滚动的列表了)
@@ -28,10 +29,33 @@ class Chats:
         try:
             # 微信-最后控件-控件0-控件2-控件0-控件0-控件0-控件0-最后一个控件-控件0-控件0-消息列表控件-消息列表底下的所有子孩子
             # 消息列表
-            self.message_list = self.message_list = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetChildren()
+            self.message_list = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetChildren()
         except AttributeError:
             # print("\033[91m未成功获取消息列表\033[0m")
             pass
+        """编辑窗口"""
+        try:    # 这些控件只有在有对话窗口是才会出现
+            # 工具栏： 微信-最后控件-控件0-控件2-控件0-控件0-控件0-控件0-最后一个控件-最后一个控件-最后一个控件-控件0-控件0(工具栏)-子孩子(编辑窗口的所有控件)
+            self.tool_bar = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetLastChildControl().GetLastChildControl().GetFirstChildControl().GetFirstChildControl().GetChildren()
+            # 这里少了5、6是因为它们不是按钮而是空格
+            self.emoji_button = self.tool_bar[0]        # 表情按钮，工具栏里面的控件0
+            self.send_file_button = self.tool_bar[1]    # 发送文件按钮，工具栏里面的控件1
+            self.screenshot_button = self.tool_bar[2]   # 截图按钮，工具栏里面的控件2
+            self.screenshot_button2 = self.tool_bar[3]  # 截图按钮2，工具栏里面的控件3
+            self.chat_history_button = self.tool_bar[4] # 聊天记录按钮，工具栏里面的控件4
+            self.voice_chat_button = self.tool_bar[7]   # 语音聊天按钮，工具栏里面的控件5
+            self.video_chat_button = self.tool_bar[8]   # 视频聊天按钮，工具栏里面的控件6
+            # 发送按钮： 微信-最后控件-控件0-控件2-控件0-控件0-控件0-控件0-最后一个控件-最后一个控件-最后一个控件-控件0-最后一个控件-最后一个控件-控件0
+            self.send_button = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetLastChildControl().GetLastChildControl().GetFirstChildControl().GetLastChildControl().GetLastChildControl().GetFirstChildControl()
+            # 编辑框：微信-最后控件-控件0-控件2-控件0-控件0-控件0-控件0-最后一个控件-最后一个控件-最后一个控件-控件0-控件1(PaneControl)-控件0(编辑控件)
+            self.edit_box = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetLastChildControl().GetLastChildControl().GetFirstChildControl().GetChildren()[1].GetFirstChildControl()
+            self.edit_box2 = self.wc.win.GetLastChildControl().GetFirstChildControl().GetChildren()[2].GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetFirstChildControl().GetLastChildControl().GetLastChildControl().GetLastChildControl().GetFirstChildControl().GetChildren()[1]
+        except AttributeError:
+            pass
+
+
+
+
         """文件记录路径相关"""
         self.message_path = os.path.join(os.getcwd(), f"{self.wc.id}")  # 创建文件夹用来放置当前绑定账号的聊天记录
         # self.file_path = os.path.join(self.message_path, "微信文件")   # 保存文件的路径
@@ -113,11 +137,6 @@ class Chats:
                 sleep(wait_time)
                 return control  # 返回有效控件
         return False    # 没早到新的消息(会话列表此时改变了就这样)
-
-
-
-
-
 
     """记录保存相关"""
     def create_record_directory(self, out = False):
