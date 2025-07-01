@@ -1,0 +1,17 @@
+发生错误：
+Traceback (most recent call last):
+  File "B:\Deepseek对话引擎\调用示例\QQ机器人\QQ聊天AI.py", line 383, in <module>
+    chat_win1.monitor_message() # 始监控
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "B:\Deepseek对话引擎\调用示例\QQ机器人\QQMessageMonitor.py", line 706, in monitor_message
+    self.get_messages()  # 更新消息来进行对比(更新消息列表、控件id号、最大消息数)
+    ~~~~~~~~~~~~~~~~~^^
+  File "B:\Deepseek对话引擎\调用示例\QQ机器人\QQMessageMonitor.py", line 679, in get_messages
+    elif len(message_control.GetChildren()) == 2: # 引用和卡片
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "A:\Anaconda3\envs\QQBot\Lib\site-packages\uiautomation\uiautomation.py", line 7054, in GetChildren
+    child = child.GetNextSiblingControl()
+  File "A:\Anaconda3\envs\QQBot\Lib\site-packages\uiautomation\uiautomation.py", line 7011, in GetNextSiblingControl
+    ele = _AutomationClient.instance().ViewWalker.GetNextSiblingElement(self.Element)
+KeyboardInterrupt
+

@@ -7,7 +7,6 @@ QQ的消息是一堆控件组合而成的(超级复合窗口)，而且这一堆�
 ***
 ## 导包初始化
 1. 通过win32api查看QQ是否打开（好像可以不写）
-2. 
 ## QQMessageMonitor类
 创建QQMessageMonitor对象后就会对窗口进行绑定，并且会进行一系列的初始化
 
@@ -20,3 +19,13 @@ QQ的消息是一堆控件组合而成的(超级复合窗口)，而且这一堆�
 检查作为 Windows 软件开发工具包（SDK）中的工具之一进行安装，其中包括本节中记录的所有辅助功能相关工具。 检查不会作为单独的下载分发。
 Inspect.exe 位于 SDK 安装路径的 \bin\<版本>\<平台> 文件夹中。 通常不需要以管理员身份运行它。
 SDK下载链接：https://go.microsoft.com/fwlink/?linkid=2305205
+
+## 需要的包
+```python
+pip install requests
+pip install uiautomation
+pip install pywin32
+pip install pillow
+pip install transformers
+pip install openai
+```

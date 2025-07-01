@@ -1,3 +1,4 @@
+# pyinstaller --hidden-import comtypes --add-data "A:/Anaconda3/envs/QQBot/Lib/site-packages/comtypes;comtypes" --add-data "A:/Anaconda3/envs/QQBot/Lib/site-packages/uiautomation/bin;uiautomation/bin" -i .\文档\QQ_chat_AI.ico --uac-admin -D QQ聊天AI.py
 """
 非必要不要加这个字段：--uac-admin  这个是添加管理员权限的（其实这里我觉得是必要得，非必要是pyinstaller文档）
 pyinstaller -i .\文档\QQ_chat_AI.ico --splash .\文档\QQ_chat_AI.png --uac-admin -D QQ聊天AI.py

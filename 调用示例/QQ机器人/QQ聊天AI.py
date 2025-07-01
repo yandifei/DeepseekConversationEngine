@@ -24,7 +24,8 @@ class InitSettings:
         self.root_list = list() # 超管列表(自己AI账号和控制台添加的账号)
         self.__super_password = ""   # 退出指令的密码(不能为空)
         self.order_limit = False  # 指令限制，去掉可能违规的指令（默认无）
-        self.permission_isolation_flag = True  # 设置权限隔离标志,默认开启(防有心之人)[默认自己和自己添加额外添加的超管]
+        # 设置权限隔离标志,默认开启(防有心之人)[默认自己和自己添加额外添加的超管]
+        self.permission_isolation_flag = False      # 不开启了，真防又防不住，又没人用
         """配置读取"""
         # 创建一个 INI 格式配置文件的解析器对象(严格区分大小写)
         self.config = configparser.ConfigParser(allow_no_value=False, strict=True)
@@ -186,6 +187,7 @@ chat_win1 = QQMessageMonitor(init_setting.qq_group_name, init_setting.user_name,
 deepseek = DeepseekConversationEngine(init_setting.init_role)  # 实例化对象
 # 初始化高级权限者列表(所有管理员包括超管理)
 advanced_permissions_list = init_setting.root_list.copy()   # 默认添加超管(自己以及额外添加的成员)
+advanced_permissions_list.append("自己") # 在发送者中将把自己发送的消息的发送者改为自己
 """--------------------------------------------------QQ窗口绑定处理----------------------------------------------------"""
 chat_win1.move(init_setting.win_x, init_setting.win_y)          # 移动窗口
 print(f"\033[92m数据存放路径:  \033[96m{chat_win1.message_data_txt}\033[0m")
@@ -400,16 +402,19 @@ while True:
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
             # 开启权限隔离功能且非高级管理者使用了指令系统
             elif init_setting.permission_isolation_flag and sender not in advanced_permissions_list:    # 如果发送者在高级权限就不执行以下的指令
+                print(advanced_permissions_list)
                 print(f"\033[94m接收了一条高级权限人员的指令，不执行该指令\033[0m")
                 chat_win1.send_message("权限不足，如要执行请联系管理员或超管")
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
+                print(f"发送者：{sender}")
                 continue    # 跳过此次循环，不执行分割指令执行指令的操作
             elif init_setting.order_limit:  # 开启了指令限制
                 chat_win1.send_message("不存在该指令或此为限制指令，请让超管开启")
-                print(f"\033不存在该指令或此为限制指令，请让管理员开启\033[0m")
+                print(f"\033不存在该指令或此为限制指令，请让超管开启\033[0m")
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
-            elif not init_setting.order_limit:  # 没有开启指令限制
-                quick_order(accept_message)    # 把指令带进入分析
+            # 没有开启指令限制
+            elif not init_setting.order_limit:
+                quick_order(accept_message)  # 把指令带进入分析
                 print(f"\033[94m已完成“{sender}”的指令\033[0m")
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
         else:       # 非退出指令操作

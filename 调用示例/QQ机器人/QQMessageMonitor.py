@@ -429,7 +429,10 @@ class QQMessageMonitor:
         except Exception as e:
             print(f"\033[91m出现异常错误:{e},粘贴处发生异常，强制推送启动\033[0m")  # 设置剪切板内容出现异常
             # 捕获异常后重新发送（出现异常一般都是剪切板没有内容）
-            uiautomation.SetClipboardText(text)  # 设置剪切板内容
+            try:
+                uiautomation.SetClipboardText(text)  # 设置剪切板内容
+            except Exception: # 图片
+                uiautomation.SetClipboardBitmap(text) # 此时文本不再是文本，而是二进制的图片，这里推送必定报错
             self.edit_box.SetFocus()  # 设置焦点
             self.edit_box.SendKeys("{ctrl}v")
         """后台点击发送按钮"""
@@ -543,6 +546,7 @@ class QQMessageMonitor:
         """
         # [administrator for administrator in self.group_member_list if self.group_member_list.GetChildren()[2].GetChildren()[0].Name == "管理员"]
         qq_group_administrator_list = list()    # 群成员列表
+
         qq_group_administrator_list.append(self.group_member_list.GetChildren()[0].GetChildren()[1].Name)    # 收录群主的名字
         for administrator in self.group_member_list.GetChildren()[1:]:    # 遍历成员列表(跳过群组遍历)
             if len(administrator.GetChildren()) == 3:    # 检测身份(不是管理员或群主没有3个控件，这个控件记录身份)
