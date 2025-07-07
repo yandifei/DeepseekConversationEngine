@@ -22,7 +22,7 @@ class InitSettings:
         self.win_y = None   # 窗口y位置
         self.administrator_list = list() # 管理员列表(Q群群主或管理员)
         self.root_list = list() # 超管列表(自己AI账号和控制台添加的账号)
-        self.__super_password = ""   # 退出指令的密码(不能为空)
+        self.super_password = ""   # 退出指令的密码(不能为空)
         self.order_limit = False  # 指令限制，去掉可能违规的指令（默认无）
         # 设置权限隔离标志,默认开启(防有心之人)[默认自己和自己添加额外添加的超管]
         self.permission_isolation_flag = False      # 不开启了，真防又防不住，又没人用
@@ -36,9 +36,9 @@ class InitSettings:
 
     def loading_settings(self):
         """加载用户配置"""
-        self.__super_password = input("\033[91m请设置退出指令的密码:\033[0m")
-        while self.__super_password == "":
-            self.__super_password = input("\033[91m密码不能为空，请重新输入:\033[0m")
+        self.super_password = input("\033[91m请设置退出指令的密码:\033[0m")
+        while self.super_password == "":
+            self.super_password = input("\033[91m密码不能为空，请重新输入:\033[0m")
         # 检查配置存在标志(判断是否需要用户配置)
         if self.config["用户配置"].getboolean("configuration_exists_flag"):
             is_modify = input("\033[95m是否沿用上次的配置(直接回车为y)？(y/n):\033[0m")
@@ -354,7 +354,7 @@ def exit_qq_auto_reply(root_name, message):
     先判断是否为超管，然后是判断密码
     """
     # 判断是否为超管
-    if root_name not in init_setting.root_list or root_name != "自己":
+    if root_name not in init_setting.root_list and root_name != "自己":
         print("\033[31m此为高级操作，你无权执行该指令\033[0m")
         chat_win1.send_message("此为高级操作，你无权执行该指令")
         return False
@@ -363,7 +363,7 @@ def exit_qq_auto_reply(root_name, message):
         chat_win1.send_message("请附带密码参数以及密码不能为空")
         return False
     # 密码必须正确且是超管
-    elif message.split(":", 1)[1] == init_setting.__super_password and (root_name in init_setting.root_list or root_name == "自己"):
+    elif message.split(":", 1)[1] == init_setting.super_password:
         print("\033[31m已停止QQ监听回复和退出deepseek对话引擎\033[0m")
         chat_win1.send_message("已停止QQ自动回复\n已退出deepseek对话引擎")
         sys.exit()  # 优雅退出程序
@@ -397,6 +397,7 @@ while True:
                 quick_order(accept_message)  # 把无限制指令带进入分析9+-
                 print(f"\033[94m已完成“{sender}”对无限制指令的处理\033[0m")
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
+            # 检查是否有“退出”消息且是管理员使用了指令系统
             elif "#退出" in accept_message and (sender == init_setting.root or sender == "自己"):  # 消息中存在退出指令(这里2次判断身份)
                 exit_qq_auto_reply(sender,accept_message)  # 检查发送者的身份是否为管理员(内置优雅退出)
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
@@ -418,7 +419,7 @@ while True:
                 print(f"\033[94m已完成“{sender}”的指令\033[0m")
                 chat_win1.message_processing_queues.pop(0)  # 清理回应的消息(出队)[必须放到最外面]
         else:       # 非退出指令操作
-            reply = deepseek.ask(f"{sender}:{accept_message}",False)  # 发出请求并回应(这里不打印到屏幕上)
+            reply = deepseek.ask(f"{sender}:{accept_message}，当前时间:{datetime.now()}",False)  # 发出请求并回应(这里不打印到屏幕上)
             print(f"\033[96m{reply}\033[0m")    # 打印回应字体(青色)
             if sender == "系统":      # 如果是系统发送就不@了
                 chat_win1.send_message(reply)  # 直接把回应发送到qq

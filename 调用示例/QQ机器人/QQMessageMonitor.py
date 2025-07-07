@@ -849,9 +849,13 @@ class QQMessageMonitor:
         elif "黑丝涩图" in message_dict["发送消息"]:
             print(f"\033[94m收到 {message_dict["发送者"]} 黑丝色图发送请求\033[0m")
             self.send_url_image("https://v2.xxapi.cn/api/heisi?return=302")  # 发送黑丝图片
-        elif "萝莉涩图" in message_dict["发送消息"] or "涩图" in message_dict["发送消息"]:
+        elif "萝莉涩图" in message_dict["发送消息"] in message_dict["发送消息"]:
             print(f"\033[94m收到 {message_dict["发送者"]} 色图发送请求\033[0m")
             self.send_url_image("https://t.alcy.cc/moe")  # 发送图片
+        # 精美壁纸
+        elif "精美壁纸" in message_dict["发送消息"] in message_dict["发送消息"]:
+            print(f"\033[94m收到 {message_dict["发送者"]} 精美壁纸发送请求\033[0m")
+            self.send_url_image("https://image.anosu.top/pixiv")  # 发送图片
             """正规定模块"""
         # 截获自己被@的情况做出消息处理
         elif f"@{self.monitor_name}" in message_dict["发送消息"]:  # 最新列表获取消息
@@ -890,6 +894,6 @@ if __name__ == '__main__':
     #     sleep(0.5)   # 每1秒监测一次变化(0.5防止遗漏)
     #     chat1.monitor_message() # 开始监控
     #     chat1.show_win()    # 展示窗口
-    #     chat1.top_win()     # 置顶窗口
+    #     chat1.top_win()     # 置顶窗口 zA
     print("可以输出没有语法错误")
 
