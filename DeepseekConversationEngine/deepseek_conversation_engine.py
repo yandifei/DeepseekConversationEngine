@@ -228,11 +228,11 @@ class DeepseekConversationEngine:
         out : 修改错误时是否输出参数范围
         返回值：修改错误返回False，成功修改返回True
         """
-        if response_format == "text" or response_format == "json":
-            self.response_format = response_format
+        if response_format == "text" or response_format == "json_object":
+            self.response_format = {"type": response_format}
             if out: print(f"已指定模型必须输出的格式为{response_format}")
             return True
-        if out: print(f"\033[91m参数有误，指定模型必须输出的格式为\"text\"或\"json\"，不对该参数进行任何修改\033[0m")
+        if out: print(f"\033[91m参数有误，指定模型必须输出的格式为\"text\"或\"json_object\"，不对该参数进行任何修改\033[0m")
         return False
 
     def set_stop(self, stop = None, out = False):
@@ -1011,7 +1011,7 @@ class DeepseekConversationEngine:
             "#R1模型" : lambda : self.set_model("R1", True),
             "#评分": lambda : self.score_answer(int(input("对此次回答进行评分(0-100分,默认50分):")),True),
             "#最大token数": lambda : self.set_max_tokens(int(input("请输入最大token限制(1-8192,默认4096):")),True),
-            "#输出格式": lambda : self.set_response_format(input("请输入指定输出格式(text或json):"),True),
+            "#输出格式": lambda : self.set_response_format(input("请输入指定输出格式(text或json_object):"),True),
             "#敏感词": lambda : self.set_stop(input("设置敏感词:"),True),
             "#删除敏感词": lambda: self.del_stop(input("请输入需要删除的敏感词:"),True),
             "#流式": lambda : self.set_stream(True,True),
