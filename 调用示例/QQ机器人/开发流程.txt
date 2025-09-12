@@ -1,0 +1,3 @@
+有关这个项目开发已经停止。
+但是基于这个项目开启了一个更加完成的项目：ArisuQQ聊天机器人
+项目地址：https://github.com/yandifei/ArisuQQChatAI
