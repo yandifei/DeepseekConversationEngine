@@ -1,6 +1,10 @@
+import json
 import os
 
 from openai import OpenAI # 从 'openai' 库中导入 'OpenAI' 类，用于与 DeepSeek API 进行交互。
+# 导入工具列表，供模型在对话中使用。# 定义一个工具列表，供模型在对话中使用。
+from tools_manage import tools, tools_map
+
 
 def send_messages(messages): # 定义一个名为 'send_messages' 的函数，接受一个参数 'messages' (对话历史列表)。
     response = client.chat.completions.create( # 调用 'client' 对象的 chat.completions.create 方法发送 API 请求。
@@ -17,68 +21,46 @@ client = OpenAI( # 创建一个 OpenAI 客户端实例。
     base_url="https://api.deepseek.com", # 设置 DeepSeek API 的基础 URL。
 )
 
-tools = [ # 定义一个工具列表，供模型在对话中使用。
-    { # 列表中的第一个 (也是唯一的) 工具定义。
-        "type": "function", # 指定工具类型为 'function' (函数)。
-        "function": { # 函数的详细定义。
-            "name": "get_weather", # 函数的名称。
-            "description": "获取某个位置的天气，用户应该首先提供一个位置。", # 函数的描述，告诉模型何时使用此函数。
-            "parameters": { # 函数所需的参数定义。
-                "type": "object", # 参数类型为对象 (表示参数集合)。
-                "properties": { # 对象的属性 (即函数的参数)。
-                    "location": { # 定义 'location' 参数。
-                        "type": "string", # 'location' 参数的类型是字符串。
-                        "description": "城市和州，例如加利福尼亚州旧金山", # 'location' 参数的描述和示例。
-                    }
-                },
-                "required": ["location"] # 指定 'location' 参数是必需的。
-            },
-        }
-    },
-]
-
-messages = [{"role": "user", "content": "浙江杭州的天气怎么样？"}] # 初始化对话历史列表，包含用户的第一个问题。
-print(f"User>\t {messages[0]['content']}") # 打印用户发送的原始消息。
-
-message = send_messages(messages) # 第一次调用 API，发送用户消息。模型会决定是否调用工具。
-print(message)  # 打印返回选项
-
-tool = message.tool_calls[0] # 从模型返回的消息中提取第一个工具调用对象。
-print(message.tool_calls)
-print(tool)
-
-def get_weather(location):
-    # 这里需要写代码来调用一个真实的天气API
-    # 假设我们成功获取了数据
-    if "杭州" in location:
-        return "晴，24℃，微风"
-    elif "北京" in location:
-        return "多云，15℃"
-    else:
-        return "对不起，无法获取该地的天气信息。"
 
 
-# 遍历模型请求调用的所有工具
-for tool_call in message.tool_calls: # message 此时包含模型请求的 tool_calls
-    if tool_call.function.name == "get_weather":
-        # 1. 解析模型给出的参数
-        location = eval(tool_call.function.arguments)['location']
+messages = [{"role": "user", "content": "来张黑丝"}] # 初始化对话历史列表，包含用户的第一个问题。
+print(f"我：{messages[0]['content']}") # 打印用户发送的原始消息。
 
-        # 2. 调用我们自己写的实际函数 (例如上面的 get_weather)
-        tool_output = get_weather(location)
-
-        # 3. 将结果格式化为 tool 消息并添加到 messages
-        messages.append({
-            "role": "tool",
-            "tool_call_id": tool_call.id,
-            "content": tool_output  # 注意：这里 now 是真实函数的输出！
-        })
+# 第一次调用 API，发送用户消息。模型会决定是否调用工具。
+message = send_messages(messages)
 
 
 
-messages.append(message) # 将模型返回的包含工具调用的消息添加到对话历史中。
-print(f"将模型返回的包含工具调用的消息添加到对话历史中:\n{messages}")
+# 判断模型是否会调用工具
+if message.tool_calls:  # 工具列表有需要工具
 
-# messages.append({"role": "tool", "tool_call_id": tool.id, "content": "24℃"}) # 模拟执行工具（get_weather）并将其结果添加到对话历史中。
-# message = send_messages(messages) # 第二次调用 API，将工具执行结果发回模型，模型基于此结果生成最终答案。
-# print(f"Model>\t {message.content}") # 打印模型基于工具结果生成的最终回答。
+    # 将模型的工具调用消息添加到对话历史中（这是关键的一步！）
+    messages.append({
+        "role": "assistant",
+        "content": message.content,
+        "tool_calls": message.tool_calls})
+
+    # 遍历工具列表
+    for tool_call in message.tool_calls:
+        # 解析函数调用的参数
+        function_args = json.loads(tool_call.function.arguments) or {}
+        # 获取函数
+        if tool_call.function.name in tools_map: # 调用的工具在映射表中
+            # 调用函数并拿到返回的结果
+            result: str = tools_map[tool_call.function.name](**function_args)
+            # print(f"\033[91m函数执行结果：{result}\033[0m")
+            # 将模型返回的包含工具调用的消息添加到对话历史中。
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": result
+            })
+        else:
+            print(f"遇到了其他需要调用的工具{tool_call.function.name}")
+
+    # 第二次调用 API，将工具执行结果发回模型，模型基于此结果生成最终答案。
+    message = send_messages(messages)
+
+
+# 打印模型基于工具结果生成的最终回答。
+print(f"AI:{message.content}")
