@@ -8,11 +8,22 @@ from tools_manage import tools, tools_map
 
 def send_messages(messages): # 定义一个名为 'send_messages' 的函数，接受一个参数 'messages' (对话历史列表)。
     response = client.chat.completions.create( # 调用 'client' 对象的 chat.completions.create 方法发送 API 请求。
-        model="deepseek-chat", # 指定要使用的模型名称，这里是 DeepSeek 的聊天模型。
+        model="deepseek-reasoner", # 指定要使用的模型名称，这里是 DeepSeek 的聊天模型。
         messages=messages, # 传递对话历史列表。
-        tools=tools # 传递定义好的工具列表，让模型可以决定是否调用工具。
+        tools=tools, # 传递定义好的工具列表，让模型可以决定是否调用工具。
+        stream = True,
     )
     return response.choices[0].message # 返回响应中第一个选项 (通常是唯一的选项) 的消息对象。
+    # reasoning_content = ""
+    # content = ""
+    #
+    # for chunk in response:
+    #     if chunk.choices[0].delta.reasoning_content:
+    #         reasoning_content += chunk.choices[0].delta.reasoning_content
+    #     else:
+    #         content += chunk.choices[0].delta.content
+    #
+
 
 key = os.getenv("DEEPSEEK_API_KEY")
 
@@ -23,7 +34,9 @@ client = OpenAI( # 创建一个 OpenAI 客户端实例。
 
 
 
-messages = [{"role": "user", "content": "来张黑丝"}] # 初始化对话历史列表，包含用户的第一个问题。
+
+
+messages = [{"role": "user", "content": "给我来张黑丝，顺便告诉我现在几点"}] # 初始化对话历史列表，包含用户的第一个问题。
 print(f"我：{messages[0]['content']}") # 打印用户发送的原始消息。
 
 # 第一次调用 API，发送用户消息。模型会决定是否调用工具。
